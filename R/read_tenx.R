@@ -1,13 +1,9 @@
 
 #' @import hdf5r
 #' @importFrom Matrix sparseMatrix
-read.cds.cellranger.h5.file = function(h5.file) {
+read_cds_cellranger_h5_file = function(h5.file) {
   if(!file.exists(h5.file)){stop(paste0("File ", h5.file," not found"))}
-  #s<-h5file(h5.file, mode="r")
   s <- H5File$new(h5.file, mode="r+")
-
-  #s$ls(recursive=T)
-
   barcodes = s[["matrix/barcodes"]][]
   gene_ids = s[["matrix/features/id"]][]
   gene_names =s[["matrix/features/name"]][]
@@ -16,12 +12,7 @@ read.cds.cellranger.h5.file = function(h5.file) {
   indices = s[["matrix/indices"]][]+1
   indptr = s[["matrix/indptr"]][]
   shape = s[["matrix/shape"]][]
-  #browser()
   h5close(s)
-  # gbm = new(
-  #   "dgCMatrix",
-  #   x = data, i = indices, p = indptr,
-  #   Dim = shape)
   if(length(levels(factor(featuretype)))>1){
     warning("Warning - Multiple feature types found")
   }
@@ -29,7 +20,6 @@ read.cds.cellranger.h5.file = function(h5.file) {
   gbm = sparseMatrix(x = data, i = indices, p = indptr,
     dims = shape)
 
-  
   pData.df = data.frame(
     barcode = barcodes,
     stringsAsFactors = F
@@ -53,7 +43,6 @@ read.cds.cellranger.h5.file = function(h5.file) {
     cell_metadata = pData.df,
     gene_metadata = fData.df
   )})
-
   return(res)
 }
 
@@ -62,7 +51,7 @@ read.cds.cellranger.h5.file = function(h5.file) {
 #' @importFrom Matrix sparseMatrix
 #' @importFrom Matrix readMM
 #' @importFrom data.table fread
-read.cds.starsolo.file = function(folder) {
+read_cds_starsolo_file = function(folder) {
   if(!file.exists(folder)){stop(paste0("File ", folder," not found"))}
   files<-c("features.tsv", "barcodes.tsv", "matrix.mtx")
   
@@ -71,7 +60,6 @@ read.cds.starsolo.file = function(folder) {
   gene_ids = feats$V1
   gene_names = feats$V2
   gbm = readMM(file.path(folder, files[3]))
-  
   
   pData.df = data.frame(
     barcode = barcodes,
@@ -100,24 +88,24 @@ read.cds.starsolo.file = function(folder) {
 }
 
 #' Make monocle3 cell_data_set using cellranger h5
-#' @description This function reads a vector of cellranger "out" folders for .h5 files.  This function
-#' will create a cds of the data using cellranger thresholds for filtering out droplets that do not contain cells.
-#' Optionally, this function can return the unfiltered data as well for further manipulation (ie adjustment of 
-#' droplet thresholds) if desired.
+#' @description This function reads a vector of cellranger "out" folders for .h5 files or will directly import .h5 files 
+#' using the 'file' argument.  This function will create a cds of the data using cellranger thresholds for filtering out 
+#' droplets that do not contain cells.  Optionally, this function can return the unfiltered data as well for further 
+#' manipulation (ie adjustment of droplet thresholds) if desired.
 #' @param folders A vector of cellranger folders (full folder name is ideal).  These must contain an "outs" subfolders with
 #' two files; 1) raw_feature_bc_matrix.h5, and 2) filtered_feature_bc_matrix.h5.  For aggregated samples
 #' run with cellrangers 'aggregate' function, this folder should also contain the aggregation.csv file.
+#' @param files A vector of filtered h5 cellranger files.  Not compatible with aggregated mode.
+#' @param unfilt_files A vector of unfiltered h5 cellranger files.  Not compatible with aggregated mode.  Will be ignored if unfiltered is FALSE.
 #' @param samplenames An optional vector that corresponds to the names you would like to give to
 #'each element in filelist.  This defaults to the the basename of the filelist element i.e.
 # the folder /home/user/cellranger/runs/Samp1-SA-GA_A1 would be given the name: "Samp1-SA-GA_A1"
-#' @param files A vector of filtered h5 cellranger files.  Not compatible with aggregated mode.
-#' @param unfilt_files A vector of unfiltered h5 cellranger files.  Not compatible with aggregated mode.  Will be ignored if unfiltered is FALSE.
-#' @param unfiltered This parameter, if true, returns a list containing 1) the filtered cds,
-#'2) a list of unfiltered cds for each sample in 'folders'.
+#' @param unfiltered This parameter, if TRUE, returns a list containing 1) the filtered cds,
+#'2) a list of unfiltered cds for each sample in 'folders', ultimately enabling the user to set desired cutoffs for inclusion of droplets as 'cells'.
 #' @param empty.droplet.threshold minimum number of umis per droplet to include in unfiltered output (default 15)
 #' @param expressed_genes If true, this option removes genes that do not have expression in at least a 
 #' minumum number of cells (cell_min parameter)
-#' @param cell_min Minimum number of cells that a gene needs to be expressed for the gene to be included in the 
+#' @param cell_min Minimum number of cells that a gene needs to be expressed for the gene to be included
 #' @param aggregated will read a cellranger aggregate folder, this is currently only supported for 1 folder.  The 'aggregation.csv'
 #' file must be included in the 'outs' folder.
 #' @return a cell_data_set object or a list of items if unfiltered data is returned (see unfiltered)
@@ -148,7 +136,7 @@ load_cellranger_data_h5<-function(folders=NULL,
       agg_file<-file.path(folders[1], "outs", "aggregation.csv")
       message(paste0("Reading aggregated (filtered) data for: ", filt_file))
       if(!file.exists(agg_file)) stop("aggregation.csv file must be present in 'outs'")
-      cds = read.cds.cellranger.h5.file(filt_file)
+      cds = read_cds_cellranger_h5_file(filt_file)
       agg<-read.csv(agg_file)
       pData(cds)$n.umi = Matrix::colSums(exprs(cds))
       pData(cds)$sample_no<-sapply(strsplit(rownames(pData(cds)), "-"), "[[", 2)
@@ -162,7 +150,7 @@ load_cellranger_data_h5<-function(folders=NULL,
       
       #aggregate unfiltered option:
       message(paste0("Reading aggregated (unfiltered) data for: ", filt_file))
-      cds_unfilt = read.cds.cellranger.h5.file(unfilt_file)
+      cds_unfilt = read_cds_cellranger_h5_file(unfilt_file)
       agg<-read.csv(agg_file)
       pData(cds_unfilt)$n.umi = Matrix::colSums(exprs(cds_unfilt))
       pData(cds_unfilt)$sample_no<-sapply(strsplit(rownames(pData(cds_unfilt)), "-"), "[[", 2)
@@ -196,14 +184,14 @@ load_cellranger_data_h5<-function(folders=NULL,
     
     for(sample.id in sample.ids){
       message(paste0("Reading (filtered) data for: ", sample.id))
-      filtered.cds.list[[sample.id]] = read.cds.cellranger.h5.file(sample.id)
+      filtered.cds.list[[sample.id]] = read_cds_cellranger_h5_file(sample.id)
       pData(filtered.cds.list[[sample.id]])$n.umi<-colSums(exprs(filtered.cds.list[[sample.id]]))
     }
     
     #add_and checkrownames
     if(length(filtered.cds.list)>1){
       fdat_rownames<-lapply(filtered.cds.list, function(cds) rownames(fData(cds)))
-      if(!all.identical(fdat_rownames))stop("Not all genes are the same across samples")
+      if(!all_identical(fdat_rownames))stop("Not all genes are the same across samples")
     }
     #make fData
     common.fData = fData(filtered.cds.list[[sample.ids[1]]])
@@ -260,7 +248,7 @@ load_cellranger_data_h5<-function(folders=NULL,
     }
     for(sample.id in sample.ids){
         message(paste0("Reading (unfiltered) data for: ", sample.id))
-        unfiltered.cds.list[[sample.id]] = read.cds.cellranger.h5.file(
+        unfiltered.cds.list[[sample.id]] = read_cds_cellranger_h5_file(
           file.path(sample.id))
         pData(unfiltered.cds.list[[sample.id]])$n.umi<-colSums(exprs(unfiltered.cds.list[[sample.id]]))
         #filter out based on empty droplet threshold
@@ -270,7 +258,7 @@ load_cellranger_data_h5<-function(folders=NULL,
     #add_and checkrownames
     if(length(filtered.cds.list)>1){
       fdat_rownames<-lapply(filtered.cds.list, function(cds) rownames(fData(cds)))
-      if(!all.identical(fdat_rownames))stop("Not all genes are the same across samples")
+      if(!all_identical(fdat_rownames))stop("Not all genes are the same across samples")
     }
     #make fData
     common.fData = fData(unfiltered.cds.list[[sample.ids[1]]])
@@ -330,7 +318,7 @@ load_cellranger_data_h5<-function(folders=NULL,
     filtered.cds.list<-list()
     for(sample.id in sample.ids){
       message(paste0("Reading (filtered) data for: ", sample.id))
-      filtered.cds.list[[sample.id]] = read.cds.cellranger.h5.file(
+      filtered.cds.list[[sample.id]] = read_cds_cellranger_h5_file(
         file.path(sample.id, "outs", h5file))
       pData(filtered.cds.list[[sample.id]])$n.umi<-colSums(exprs(filtered.cds.list[[sample.id]]))
     }
@@ -338,7 +326,7 @@ load_cellranger_data_h5<-function(folders=NULL,
     #add_and checkrownames
     if(length(filtered.cds.list)>1){
       fdat_rownames<-lapply(filtered.cds.list, function(cds) rownames(fData(cds)))
-      if(!all.identical(fdat_rownames))stop("Not all genes are the same across samples")
+      if(!all_identical(fdat_rownames))stop("Not all genes are the same across samples")
     }
     #make fData
     common.fData = fData(filtered.cds.list[[sample.ids[1]]])
@@ -383,7 +371,7 @@ load_cellranger_data_h5<-function(folders=NULL,
     unfiltered.cds.list<-list()
     for(sample.id in sample.ids){
       message(paste0("Reading (unfiltered) data for: ", sample.id))
-      unfiltered.cds.list[[sample.id]] = read.cds.cellranger.h5.file(
+      unfiltered.cds.list[[sample.id]] = read_cds_cellranger_h5_file(
         file.path(sample.id, "outs", "raw_feature_bc_matrix.h5"))
       pData(unfiltered.cds.list[[sample.id]])$n.umi<-colSums(exprs(unfiltered.cds.list[[sample.id]]))
     }
@@ -391,7 +379,7 @@ load_cellranger_data_h5<-function(folders=NULL,
     #add_and checkrownames
     if(length(filtered.cds.list)>1){
       fdat_rownames<-lapply(filtered.cds.list, function(cds) rownames(fData(cds)))
-      if(!all.identical(fdat_rownames))stop("Not all genes are the same across samples")
+      if(!all_identical(fdat_rownames))stop("Not all genes are the same across samples")
     }
     #make fData
     common.fData = fData(unfiltered.cds.list[[sample.ids[1]]])
@@ -459,7 +447,6 @@ load_STARsolo_data<-function(folders,
                                   empty.droplet.threshold=15, 
                                   expressed_genes=TRUE, count_method="Gene",
                                   cell_min=1){
-    
 
     if(is.null(samplenames)){
       sample.ids<-folders
@@ -468,13 +455,12 @@ load_STARsolo_data<-function(folders,
       sample.ids<-folders
       names(sample.ids)<-samplenames
     }
-    
     ######filt
     #read filtered data
     filtered.cds.list<-list()
     for(sample.id in sample.ids){
       message(paste0("Reading (filtered) data for: ", sample.id))
-      filtered.cds.list[[sample.id]] = read.cds.starsolo.file(
+      filtered.cds.list[[sample.id]] = read_cds_starsolo_file(
         file.path(sample.id, count_method, "filtered"))
       pData(filtered.cds.list[[sample.id]])$n.umi<-colSums(exprs(filtered.cds.list[[sample.id]]))
     }
@@ -482,7 +468,7 @@ load_STARsolo_data<-function(folders,
     #add_and checkrownames
     if(length(filtered.cds.list)>1){
       fdat_rownames<-lapply(filtered.cds.list, function(cds) rownames(fData(cds)))
-      if(!all.identical(fdat_rownames))stop("Not all genes are the same across samples")
+      if(!all_identical(fdat_rownames))stop("Not all genes are the same across samples")
     }
     #make fData
     common.fData = fData(filtered.cds.list[[sample.ids[1]]])
@@ -505,7 +491,6 @@ load_STARsolo_data<-function(folders,
       new.exprs[[sample.id]] = exprs(filtered.cds.list[[sample.id]])
       colnames(new.exprs[[sample.id]]) = new.pData[[sample.id]]$cell
     }
-    
     #combine
     combined.pData = do.call(rbind, new.pData)
     combined.pData = combined.pData[, c("barcode", "n.umi",  "sample")]
@@ -527,7 +512,7 @@ load_STARsolo_data<-function(folders,
     unfiltered.cds.list<-list()
     for(sample.id in sample.ids){
       message(paste0("Reading (unfiltered) data for: ", sample.id))
-      unfiltered.cds.list[[sample.id]] = read.cds.starsolo.file(
+      unfiltered.cds.list[[sample.id]] = read_cds_starsolo_file(
         file.path(sample.id, count_method, "raw"))
       pData(unfiltered.cds.list[[sample.id]])$n.umi<-colSums(exprs(unfiltered.cds.list[[sample.id]]))
     }
@@ -535,7 +520,7 @@ load_STARsolo_data<-function(folders,
     #add_and checkrownames
     if(length(filtered.cds.list)>1){
       fdat_rownames<-lapply(filtered.cds.list, function(cds) rownames(fData(cds)))
-      if(!all.identical(fdat_rownames))stop("Not all genes are the same across samples")
+      if(!all_identical(fdat_rownames))stop("Not all genes are the same across samples")
     }
     #make fData
     common.fData = fData(unfiltered.cds.list[[sample.ids[1]]])
@@ -616,5 +601,5 @@ add_meta_data_cds<-function(cds, meta, cds_col="sample", meta_col="sample"){
 }
 
 
-all.identical <- function(l) all(mapply(identical, head(l, 1), tail(l, -1)))
+all_identical <- function(l) all(mapply(identical, head(l, 1), tail(l, -1)))
 

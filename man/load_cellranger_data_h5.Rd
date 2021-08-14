@@ -26,8 +26,8 @@ run with cellrangers 'aggregate' function, this folder should also contain the a
 \item{samplenames}{An optional vector that corresponds to the names you would like to give to
 each element in filelist.  This defaults to the the basename of the filelist element i.e.}
 
-\item{unfiltered}{This parameter, if true, returns a list containing 1) the filtered cds,
-2) a list of unfiltered cds for each sample in 'folders'.}
+\item{unfiltered}{This parameter, if TRUE, returns a list containing 1) the filtered cds,
+2) a list of unfiltered cds for each sample in 'folders', ultimately enabling the user to set desired cutoffs for inclusion of droplets as 'cells'.}
 
 \item{files}{A vector of filtered h5 cellranger files.  Not compatible with aggregated mode.}
 
@@ -38,7 +38,7 @@ each element in filelist.  This defaults to the the basename of the filelist ele
 \item{expressed_genes}{If true, this option removes genes that do not have expression in at least a 
 minumum number of cells (cell_min parameter)}
 
-\item{cell_min}{Minimum number of cells that a gene needs to be expressed for the gene to be included in the}
+\item{cell_min}{Minimum number of cells that a gene needs to be expressed for the gene to be included}
 
 \item{aggregated}{will read a cellranger aggregate folder, this is currently only supported for 1 folder.  The 'aggregation.csv'
 file must be included in the 'outs' folder.}
@@ -47,8 +47,8 @@ file must be included in the 'outs' folder.}
 a cell_data_set object or a list of items if unfiltered data is returned (see unfiltered)
 }
 \description{
-This function reads a vector of cellranger "out" folders for .h5 files.  This function
-will create a cds of the data using cellranger thresholds for filtering out droplets that do not contain cells.
-Optionally, this function can return the unfiltered data as well for further manipulation (ie adjustment of 
-droplet thresholds) if desired.
+This function reads a vector of cellranger "out" folders for .h5 files or will directly import .h5 files 
+using the 'file' argument.  This function will create a cds of the data using cellranger thresholds for filtering out 
+droplets that do not contain cells.  Optionally, this function can return the unfiltered data as well for further 
+manipulation (ie adjustment of droplet thresholds) if desired.
 }
