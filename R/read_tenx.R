@@ -142,7 +142,7 @@ load_cellranger_data_h5<-function(folders=NULL,
       pData(cds)$sample_no<-sapply(strsplit(rownames(pData(cds)), "-"), "[[", 2)
       agg$sample_no<-1:nrow(agg)
       if(expressed_genes){
-        cds<-detect_genes(cds, exprs_bin = F)
+        cds<-detect_genes(cds)
         cds<-cds[fData(cds)$num_cells_expressed>cell_min,]
       }
       cds<-add_meta_data_cds(cds=cds, meta=agg, cds_col = "sample_no", meta_col = "sample_no")
@@ -156,7 +156,7 @@ load_cellranger_data_h5<-function(folders=NULL,
       pData(cds_unfilt)$sample_no<-sapply(strsplit(rownames(pData(cds_unfilt)), "-"), "[[", 2)
       agg$sample_no<-1:nrow(agg)
       if(expressed_genes){
-        cds_unfilt<-detect_genes(cds_unfilt, exprs_bin = F)
+        cds_unfilt<-detect_genes(cds_unfilt)
         cds_unfilt<-cds_unfilt[fData(cds_unfilt)$num_cells_expressed>cell_min,]
       }
       cds_unfilt<-add_meta_data_cds(cds=cds_unfilt, meta=agg, cds_col = "sample_no", meta_col = "sample_no")
@@ -226,7 +226,7 @@ load_cellranger_data_h5<-function(folders=NULL,
       gene_metadata = common.fData
     )
     if(expressed_genes){
-      cds<-detect_genes(cds, exprs_bin = F)
+      cds<-detect_genes(cds)
       cds<-cds[fData(cds)$num_cells_expressed>cell_min,]
     }
     if(!unfiltered){return(cds)}
@@ -293,7 +293,7 @@ load_cellranger_data_h5<-function(folders=NULL,
       gene_metadata = common.fData
     )
     if(expressed_genes){
-      cds_unfilt<-detect_genes(cds_unfilt, exprs_bin = F)
+      cds_unfilt<-detect_genes(cds_unfilt)
       cds_unfilt<-cds_unfilt[fData(cds_unfilt)$num_cells_expressed>cell_min,]
     }
     if(unfiltered){return(list(unfiltered_cds=cds_unfilt, filtered_cds=cds))}
@@ -361,7 +361,7 @@ load_cellranger_data_h5<-function(folders=NULL,
       gene_metadata = common.fData
     )
     if(expressed_genes){
-      cds<-detect_genes(cds, exprs_bin = F)
+      cds<-detect_genes(cds)
       cds<-cds[fData(cds)$num_cells_expressed>cell_min,]
     }
     if(!unfiltered){return(cds)}
@@ -414,7 +414,7 @@ load_cellranger_data_h5<-function(folders=NULL,
       gene_metadata = common.fData
     )
     if(expressed_genes){
-      cds_unfilt<-detect_genes(cds_unfilt, exprs_bin = F)
+      cds_unfilt<-detect_genes(cds_unfilt)
       cds_unfilt<-cds_unfilt[fData(cds_unfilt)$num_cells_expressed>cell_min,]
     }
     if(unfiltered){return(list(unfiltered_cds=cds_unfilt, filtered_cds=cds))}
@@ -502,7 +502,7 @@ load_STARsolo_data<-function(folders,
       gene_metadata = common.fData
     )
     if(expressed_genes){
-      cds<-detect_genes(cds, exprs_bin = F)
+      cds<-detect_genes(cds)
       cds<-cds[fData(cds)$num_cells_expressed>cell_min,]
     }
     if(!unfiltered){return(cds)}
@@ -555,7 +555,7 @@ load_STARsolo_data<-function(folders,
       gene_metadata = common.fData
     )
     if(expressed_genes){
-      cds_unfilt<-detect_genes(cds_unfilt, exprs_bin = F)
+      cds_unfilt<-detect_genes(cds_unfilt)
       cds_unfilt<-cds_unfilt[fData(cds_unfilt)$num_cells_expressed>cell_min,]
     }
     if(unfiltered){return(list(unfiltered_cds=cds_unfilt, filtered_cds=cds))}

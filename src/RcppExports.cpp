@@ -6,100 +6,6 @@
 
 using namespace Rcpp;
 
-// sp_show_storage
-Rcpp::NumericMatrix sp_show_storage(const arma::sp_mat& x);
-RcppExport SEXP _viewmaster_sp_show_storage(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::sp_mat& >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(sp_show_storage(x));
-    return rcpp_result_gen;
-END_RCPP
-}
-// subsetSM
-arma::sp_mat subsetSM(const arma::sp_mat& a, Rcpp::NumericVector rind, Rcpp::NumericVector cind);
-RcppExport SEXP _viewmaster_subsetSM(SEXP aSEXP, SEXP rindSEXP, SEXP cindSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::sp_mat& >::type a(aSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type rind(rindSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type cind(cindSEXP);
-    rcpp_result_gen = Rcpp::wrap(subsetSM(a, rind, cind));
-    return rcpp_result_gen;
-END_RCPP
-}
-// calculateScoresCPP
-arma::vec calculateScoresCPP(const arma::sp_mat& a, const Rcpp::NumericVector Rgenevec);
-RcppExport SEXP _viewmaster_calculateScoresCPP(SEXP aSEXP, SEXP RgenevecSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::sp_mat& >::type a(aSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::NumericVector >::type Rgenevec(RgenevecSEXP);
-    rcpp_result_gen = Rcpp::wrap(calculateScoresCPP(a, Rgenevec));
-    return rcpp_result_gen;
-END_RCPP
-}
-// logNormCPP
-arma::sp_mat logNormCPP(const arma::sp_mat& a);
-RcppExport SEXP _viewmaster_logNormCPP(SEXP aSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::sp_mat& >::type a(aSEXP);
-    rcpp_result_gen = Rcpp::wrap(logNormCPP(a));
-    return rcpp_result_gen;
-END_RCPP
-}
-// colStdDev
-arma::mat colStdDev(arma::sp_mat& a);
-RcppExport SEXP _viewmaster_colStdDev(SEXP aSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::sp_mat& >::type a(aSEXP);
-    rcpp_result_gen = Rcpp::wrap(colStdDev(a));
-    return rcpp_result_gen;
-END_RCPP
-}
-// rowStdDev
-arma::mat rowStdDev(arma::sp_mat& a);
-RcppExport SEXP _viewmaster_rowStdDev(SEXP aSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::sp_mat& >::type a(aSEXP);
-    rcpp_result_gen = Rcpp::wrap(rowStdDev(a));
-    return rcpp_result_gen;
-END_RCPP
-}
-// vstExprsCPP
-arma::mat vstExprsCPP(const arma::sp_mat& a, const double eP, const double aD, bool return_sparse, bool calc_zeros);
-RcppExport SEXP _viewmaster_vstExprsCPP(SEXP aSEXP, SEXP ePSEXP, SEXP aDSEXP, SEXP return_sparseSEXP, SEXP calc_zerosSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::sp_mat& >::type a(aSEXP);
-    Rcpp::traits::input_parameter< const double >::type eP(ePSEXP);
-    Rcpp::traits::input_parameter< const double >::type aD(aDSEXP);
-    Rcpp::traits::input_parameter< bool >::type return_sparse(return_sparseSEXP);
-    Rcpp::traits::input_parameter< bool >::type calc_zeros(calc_zerosSEXP);
-    rcpp_result_gen = Rcpp::wrap(vstExprsCPP(a, eP, aD, return_sparse, calc_zeros));
-    return rcpp_result_gen;
-END_RCPP
-}
-// iterateSparseMatrixCPP
-void iterateSparseMatrixCPP(const arma::sp_mat& a);
-RcppExport SEXP _viewmaster_iterateSparseMatrixCPP(SEXP aSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::sp_mat& >::type a(aSEXP);
-    iterateSparseMatrixCPP(a);
-    return R_NilValue;
-END_RCPP
-}
 // computeSparseRowVariances
 Rcpp::NumericVector computeSparseRowVariances(IntegerVector j, NumericVector val, NumericVector rm, int n);
 RcppExport SEXP _viewmaster_computeSparseRowVariances(SEXP jSEXP, SEXP valSEXP, SEXP rmSEXP, SEXP nSEXP) {
@@ -116,14 +22,6 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_viewmaster_sp_show_storage", (DL_FUNC) &_viewmaster_sp_show_storage, 1},
-    {"_viewmaster_subsetSM", (DL_FUNC) &_viewmaster_subsetSM, 3},
-    {"_viewmaster_calculateScoresCPP", (DL_FUNC) &_viewmaster_calculateScoresCPP, 2},
-    {"_viewmaster_logNormCPP", (DL_FUNC) &_viewmaster_logNormCPP, 1},
-    {"_viewmaster_colStdDev", (DL_FUNC) &_viewmaster_colStdDev, 1},
-    {"_viewmaster_rowStdDev", (DL_FUNC) &_viewmaster_rowStdDev, 1},
-    {"_viewmaster_vstExprsCPP", (DL_FUNC) &_viewmaster_vstExprsCPP, 5},
-    {"_viewmaster_iterateSparseMatrixCPP", (DL_FUNC) &_viewmaster_iterateSparseMatrixCPP, 1},
     {"_viewmaster_computeSparseRowVariances", (DL_FUNC) &_viewmaster_computeSparseRowVariances, 4},
     {NULL, NULL, 0}
 };
