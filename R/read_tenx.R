@@ -1,4 +1,5 @@
 
+
 #' @import hdf5r
 #' @importFrom Matrix sparseMatrix
 read_cds_cellranger_h5_file = function(h5.file) {
@@ -54,7 +55,16 @@ read_cds_cellranger_h5_file = function(h5.file) {
 read_cds_starsolo_file = function(folder) {
   if(!file.exists(folder)){stop(paste0("File ", folder," not found"))}
   files<-c("features.tsv", "barcodes.tsv", "matrix.mtx")
-  
+  ofiles<-c("genes.tsv", "barcodes.tsv", "matrix.mtx")
+  found<-sapply(files, function(file) file.exists(file.path(folder, file)))
+  ofound<-sapply(ofiles, function(file) file.exists(file.path(folder, file)))
+  if(all(ofound)){
+    files<-ofiles
+  }else{
+    if(!all(found)){
+      stop(paste0("Required files not found in: ", folder))
+    }
+  }
   barcodes = fread(file.path(folder, files[2]), header = F)$V1
   feats<- fread(file.path(folder, files[1]), header=F)
   gene_ids = feats$V1
@@ -87,15 +97,76 @@ read_cds_starsolo_file = function(folder) {
   return(res)
 }
 
+#' Files3 prep - find cellranger data files (matrix.mtx, barcodes.tsv, genes.tsv)
+#' @param folders A vector of cellranger folders (full folder name)
+#' @export
+files3_prep<-function(folder){
+  #This function attempts to identify the correct path for cellranger output using the files3 
+  #check for outs
+  uzfiles_to_check<-c("matrix.mtx", "genes.tsv", "barcodes.tsv")
+  zfiles_to_check<-c("matrix.mtx.gz", "genes.tsv.gz", "barcodes.tsv.gz")
+  outs_present<-file.exists(file.path(folder, "outs"))
+  if(!outs_present){
+    uz_found<-sapply(uzfiles_to_check, function(file) file.exists(file.path(folder, file)))
+    z_found<-sapply(zfiles_to_check, function(file) file.exists(file.path(folder, file)))
+    if(all(uz_found) | all(z_found)){
+      return(file.path(folder))
+    }
+    uz_found<-sapply(uzfiles_to_check, function(file) file.exists(file.path(folder, "filtered_feature_bc_matrix", file)))
+    z_found<-sapply(zfiles_to_check, function(file) file.exists(file.path(folder, "filtered_feature_bc_matrix", file)))
+    if(all(uz_found) | all(z_fount)){
+      return(file.path(folder,"filtered_feature_bc_matrix"))
+    }
+    uz_found<-sapply(uzfiles_to_check, function(file) file.exists(file.path(folder, "raw_feature_bc_matrix", file)))
+    z_found<-sapply(zfiles_to_check, function(file) file.exists(file.path(folder, "raw_feature_bc_matrix", file)))
+    if(all(uz_found) | all(z_found)){
+      return(file.path(folder,"raw_feature_bc_matrix"))
+    }
+  }
+  if(outs_present){
+    uz_found<-sapply(uzfiles_to_check, function(file) file.exists(file.path(folder, "outs", file)))
+    z_found<-sapply(zfiles_to_check, function(file) file.exists(file.path(folder, "outs", file)))
+    if(all(uz_found) | all(z_found)){
+      return(file.path(folder, "outs"))
+    }
+  }
+}
+
 #' Make monocle3 cell_data_set using cellranger h5
-#' @description This function reads a vector of cellranger "out" folders for .h5 files or will directly import .h5 files 
-#' using the 'file' argument.  This function will create a cds of the data using cellranger thresholds for filtering out 
-#' droplets that do not contain cells.  Optionally, this function can return the unfiltered data as well for further 
-#' manipulation (ie adjustment of droplet thresholds) if desired.
-#' @param folders A vector of cellranger folders (full folder name is ideal).  These must contain an "outs" subfolders with
-#' two files; 1) raw_feature_bc_matrix.h5, and 2) filtered_feature_bc_matrix.h5.  For aggregated samples
-#' run with cellrangers 'aggregate' function, this folder should also contain the aggregation.csv file.
+#' Depracated - see 'load_cellranger_data' and use data_type = 'h5'
+# load_cellranger_data_h5<-load_cellranger_data(folders=NULL, data_type = 'h5',
+#                                   samplenames=NULL, 
+#                                   unfiltered=F,
+#                                   files=NULL, unfilt_files=NULL,
+#                                   empty.droplet.threshold=15, 
+#                                   expressed_genes=TRUE,
+#                                   cell_min=1,
+#                                   aggregated=F, chemistry = "SC3Pv3", atac_feature="peaks"
+# )
+# 
+
+
+#' Make monocle3 cell_data_set using cellranger
+#' @description This function reads a vector of cellranger "out" folders for conversion to a monocle3 cell_data_set object
+#' 
+#' #' There are two modes of this function that enable reading data:
+#' 1. folder-mode - Loading cellranger output folder(s) specifying folder locations using the 'folders' argument
+#' 2. file-mode - Specifying h5 files directly using 'files' argument
+#' 
+#' There are two datatypes that can be read from cellranger output:
+#' 1. Loading the cellranger h5 files either by specifying cellranger output folder(s) (containing the h5 files as geneerated by cellranger) or 
+#' or can directly import .h5 files using the 'file' argument.  
+#' 2. Loading the traditional 3 files output from cellranger: (matrix.mtx, barcodes.tsv, genes.tsv)
+#' 
+#' As a default, this function will use the cellranger-imposed filters for identification of droplets 
+#' that do not contain cells, however, optionally, this function can return the unfiltered data as well for further 
+#' manipulation (ie manual adjustment of droplet thresholds) if desired.
+#' @param folders A vector of cellranger folders (full folder name).  These must contain an "outs" subfolders with
+#' two files; 1) raw_feature_bc_matrix.h5, and 2) filtered_feature_bc_matrix.h5 (if using the data_type = 'h5' setting, or 
+#' the 3 files: matrix.mtx, barcodes.tsv, genes.tsv.  For aggregated samples nrun with cellrangers 'aggregate' function, 
+#' this folder should also contain the aggregation.csv file.
 #' @param files A vector of filtered h5 cellranger files.  Not compatible with aggregated mode.
+#' @param data_type Use 'h5' for h5 import or 'files3' for the traditional 3 files (matrix.mtx, barcodes.tsv, genes.tsv).
 #' @param unfilt_files A vector of unfiltered h5 cellranger files.  Not compatible with aggregated mode.  Will be ignored if unfiltered is FALSE.
 #' @param samplenames An optional vector that corresponds to the names you would like to give to
 #'each element in filelist.  This defaults to the the basename of the filelist element i.e.
@@ -111,21 +182,27 @@ read_cds_starsolo_file = function(folder) {
 #' @return a cell_data_set object or a list of items if unfiltered data is returned (see unfiltered)
 #' @importFrom Matrix colSums
 #' @export
-load_cellranger_data_h5<-function(folders=NULL, 
-                                  samplenames=NULL, 
-                                  unfiltered=F,
-                                  files=NULL, unfilt_files=NULL,
-                                  empty.droplet.threshold=15, 
-                                  expressed_genes=TRUE,
-                                  cell_min=1,
-                                  aggregated=F, chemistry = "SC3Pv3", atac_feature="peaks"
-                                  ){
+load_cellranger_data<-function( folders=NULL, 
+                                files=NULL, 
+                                data_type = c('h5', 'files3'),
+                                samplenames=NULL, 
+                                unfiltered=F,
+                                unfilt_files=NULL,
+                                empty.droplet.threshold=15, 
+                                expressed_genes=TRUE,
+                                cell_min=1,
+                                aggregated=F, 
+                                chemistry = "SC3Pv3", 
+                                atac_feature="peaks"){
   #This function reads a vector of cellranger folder "out" folders for .h5 files.  Optionally can
   #return the unfiltered data as well.  
   if(!is.null(files) & !is.null(folders)){stop("Run either specifying folders or files")}
   if(!is.null(files) & aggregated){stop("File mode not compatible with aggregated")}
+  if(!is.null(files) & data_type=="files3"){stop("File mode not compatible with files3 datatype; import data using the 'folders' argument")}
   if(!is.null(files) & is.null(unfilt_files) & unfiltered){stop("Running unfiltered files, but filenames (unfilt_files) not provided")}
   if(!is.null(files)){filemode<-T}else{filemode<-F}
+  data_type <- match.arg(data_type)
+  read_fn<-ifelse(data_type=='h5', read_cds_cellranger_h5_file, read_cds_starsolo_file)
   if(!chemistry %in% c("threeprime", "fiveprime", "SC3Pv1", "SC3Pv2", "SC3Pv3", "SC5P-PE", "SC5P-R2", "ATAC")){stop("Chemistry not found")}
   if(chemistry %in% c("threeprime", "fiveprime", "SC3Pv1", "SC3Pv2", "SC3Pv3", "SC5P-PE", "SC5P-R2")){
     if(aggregated){
@@ -136,7 +213,7 @@ load_cellranger_data_h5<-function(folders=NULL,
       agg_file<-file.path(folders[1], "outs", "aggregation.csv")
       message(paste0("Reading aggregated (filtered) data for: ", filt_file))
       if(!file.exists(agg_file)) stop("aggregation.csv file must be present in 'outs'")
-      cds = read_cds_cellranger_h5_file(filt_file)
+      cds = read_fn(filt_file)
       agg<-read.csv(agg_file)
       pData(cds)$n.umi = Matrix::colSums(exprs(cds))
       pData(cds)$sample_no<-sapply(strsplit(rownames(pData(cds)), "-"), "[[", 2)
@@ -150,7 +227,7 @@ load_cellranger_data_h5<-function(folders=NULL,
       
       #aggregate unfiltered option:
       message(paste0("Reading aggregated (unfiltered) data for: ", filt_file))
-      cds_unfilt = read_cds_cellranger_h5_file(unfilt_file)
+      cds_unfilt = read_fn(unfilt_file)
       agg<-read.csv(agg_file)
       pData(cds_unfilt)$n.umi = Matrix::colSums(exprs(cds_unfilt))
       pData(cds_unfilt)$sample_no<-sapply(strsplit(rownames(pData(cds_unfilt)), "-"), "[[", 2)
@@ -168,7 +245,12 @@ load_cellranger_data_h5<-function(folders=NULL,
     if(filemode){
       filt_folders<-files
     }else{
-      filt_folders<-file.path(folders, "outs", "filtered_feature_bc_matrix.h5")
+      if(data_type=="h5"){
+        filt_folders<-file.path(folders, "outs", "filtered_feature_bc_matrix.h5")
+      }else{
+        #deal with case where data is in "outs" or isn't
+        filt_folders<-sapply(folders, files3_prep)
+      }
     }
     if(is.null(samplenames)){
       sample.ids<-filt_folders
@@ -184,7 +266,7 @@ load_cellranger_data_h5<-function(folders=NULL,
     
     for(sample.id in sample.ids){
       message(paste0("Reading (filtered) data for: ", sample.id))
-      filtered.cds.list[[sample.id]] = read_cds_cellranger_h5_file(sample.id)
+      filtered.cds.list[[sample.id]] = read_fn(sample.id)
       pData(filtered.cds.list[[sample.id]])$n.umi<-colSums(exprs(filtered.cds.list[[sample.id]]))
     }
     
@@ -235,9 +317,14 @@ load_cellranger_data_h5<-function(folders=NULL,
     #read unfiltered data
     unfiltered.cds.list<-list()
     if(filemode){
-      unfilt_folders<-unfilt_files
+      unfilt_folders<-files
     }else{
-      unfilt_folders<-file.path(folders, "outs", "raw_feature_bc_matrix.h5")
+      if(data_type=="h5"){
+        unfilt_folders<-file.path(folders, "outs", "unfiltered_feature_bc_matrix.h5")
+      }else{
+        #deal with case where data is in "outs" or isn't
+        unfilt_folders<-sapply(folders, files3_prep)
+      }
     }
     if(is.null(samplenames)){
       sample.ids<-unfilt_folders
@@ -248,7 +335,7 @@ load_cellranger_data_h5<-function(folders=NULL,
     }
     for(sample.id in sample.ids){
         message(paste0("Reading (unfiltered) data for: ", sample.id))
-        unfiltered.cds.list[[sample.id]] = read_cds_cellranger_h5_file(
+        unfiltered.cds.list[[sample.id]] = read_fn(
           file.path(sample.id))
         pData(unfiltered.cds.list[[sample.id]])$n.umi<-colSums(exprs(unfiltered.cds.list[[sample.id]]))
         #filter out based on empty droplet threshold
@@ -318,7 +405,7 @@ load_cellranger_data_h5<-function(folders=NULL,
     filtered.cds.list<-list()
     for(sample.id in sample.ids){
       message(paste0("Reading (filtered) data for: ", sample.id))
-      filtered.cds.list[[sample.id]] = read_cds_cellranger_h5_file(
+      filtered.cds.list[[sample.id]] = read_fn(
         file.path(sample.id, "outs", h5file))
       pData(filtered.cds.list[[sample.id]])$n.umi<-colSums(exprs(filtered.cds.list[[sample.id]]))
     }
@@ -371,7 +458,7 @@ load_cellranger_data_h5<-function(folders=NULL,
     unfiltered.cds.list<-list()
     for(sample.id in sample.ids){
       message(paste0("Reading (unfiltered) data for: ", sample.id))
-      unfiltered.cds.list[[sample.id]] = read_cds_cellranger_h5_file(
+      unfiltered.cds.list[[sample.id]] = read_fn(
         file.path(sample.id, "outs", "raw_feature_bc_matrix.h5"))
       pData(unfiltered.cds.list[[sample.id]])$n.umi<-colSums(exprs(unfiltered.cds.list[[sample.id]]))
     }

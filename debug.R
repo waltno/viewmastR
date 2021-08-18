@@ -101,4 +101,11 @@ debug(doubletFinder_v3)
 
 t<-doubletFinder_v3(cds, PCs=1:25, genes = "recalc")
 
+if (!requireNamespace("drat", quietly = TRUE)) install.packages("drat")
+drat::addRepo("daqana")
+install.packages("RcppArrayFire")
+
+RcppArrayFire.package.skeleton("af")
+
+
 
