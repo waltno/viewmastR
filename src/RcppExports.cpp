@@ -16,36 +16,13 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// rcpparrayfire_outerproduct
-af::array rcpparrayfire_outerproduct(const RcppArrayFire::typed_array<f32>& x);
-RcppExport SEXP _viewmaster_rcpparrayfire_outerproduct(SEXP xSEXP) {
+// rcpparrayfire_test_backends
+int rcpparrayfire_test_backends();
+RcppExport SEXP _viewmaster_rcpparrayfire_test_backends() {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const RcppArrayFire::typed_array<f32>& >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpparrayfire_outerproduct(x));
-    return rcpp_result_gen;
-END_RCPP
-}
-// rcpparrayfire_innerproduct
-double rcpparrayfire_innerproduct(const RcppArrayFire::typed_array<f32>& x);
-RcppExport SEXP _viewmaster_rcpparrayfire_innerproduct(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const RcppArrayFire::typed_array<f32>& >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpparrayfire_innerproduct(x));
-    return rcpp_result_gen;
-END_RCPP
-}
-// rcpparrayfire_bothproducts
-Rcpp::List rcpparrayfire_bothproducts(const RcppArrayFire::typed_array<f32>& x);
-RcppExport SEXP _viewmaster_rcpparrayfire_bothproducts(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const RcppArrayFire::typed_array<f32>& >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpparrayfire_bothproducts(x));
+    rcpp_result_gen = Rcpp::wrap(rcpparrayfire_test_backends());
     return rcpp_result_gen;
 END_RCPP
 }
@@ -66,9 +43,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_viewmaster_rcpparrayfire_hello_world", (DL_FUNC) &_viewmaster_rcpparrayfire_hello_world, 0},
-    {"_viewmaster_rcpparrayfire_outerproduct", (DL_FUNC) &_viewmaster_rcpparrayfire_outerproduct, 1},
-    {"_viewmaster_rcpparrayfire_innerproduct", (DL_FUNC) &_viewmaster_rcpparrayfire_innerproduct, 1},
-    {"_viewmaster_rcpparrayfire_bothproducts", (DL_FUNC) &_viewmaster_rcpparrayfire_bothproducts, 1},
+    {"_viewmaster_rcpparrayfire_test_backends", (DL_FUNC) &_viewmaster_rcpparrayfire_test_backends, 0},
     {"_viewmaster_computeSparseRowVariances", (DL_FUNC) &_viewmaster_computeSparseRowVariances, 4},
     {NULL, NULL, 0}
 };

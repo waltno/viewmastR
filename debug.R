@@ -5,11 +5,19 @@ library(magrittr)
 library(reticulate)
 library(Rcpp)
 library(ggplot2)
+
+setwd("~/develop/viewmaster")
+
 roxygen2::roxygenize(".")
+
+viewmaster::rcpparrayfire_test_backends()
+
 usethis::use_build_ignore("debug.R")
 usethis::use_build_ignore("debug.Rmd")
 
 cds<-readRDS("data/m3cds.RDS")
+
+rcpparrayfire_hello_world()
 
 
 sm<-as.matrix(normalized_counts(cds[1:1000,sample(ncol(cds), 1000)]))

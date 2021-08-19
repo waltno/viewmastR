@@ -5,16 +5,9 @@ rcpparrayfire_hello_world <- function() {
     .Call('_viewmaster_rcpparrayfire_hello_world', PACKAGE = 'viewmaster')
 }
 
-rcpparrayfire_outerproduct <- function(x) {
-    .Call('_viewmaster_rcpparrayfire_outerproduct', PACKAGE = 'viewmaster', x)
-}
-
-rcpparrayfire_innerproduct <- function(x) {
-    .Call('_viewmaster_rcpparrayfire_innerproduct', PACKAGE = 'viewmaster', x)
-}
-
-rcpparrayfire_bothproducts <- function(x) {
-    .Call('_viewmaster_rcpparrayfire_bothproducts', PACKAGE = 'viewmaster', x)
+#' @export
+rcpparrayfire_test_backends <- function() {
+    .Call('_viewmaster_rcpparrayfire_test_backends', PACKAGE = 'viewmaster')
 }
 
 computeSparseRowVariances <- function(j, val, rm, n) {
