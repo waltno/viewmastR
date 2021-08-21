@@ -100,35 +100,18 @@ static void benchmark_nb(const array &train_feats, const array test_feats,
   delete[] priors;
 }
 
-
 //' @export
 // [[Rcpp::export]]
-void naive_bayes(RcppArrayFire::typed_array<f32> r_train_feats,
-                 RcppArrayFire::typed_array<f32> r_test_feats,
-                 RcppArrayFire::typed_array<s32> r_train_labels,
-                 RcppArrayFire::typed_array<s32> r_test_labels,
+void naive_bayes(RcppArrayFire::typed_array<f32> train_feats,
+                 RcppArrayFire::typed_array<f32> test_feats,
+                 RcppArrayFire::typed_array<s32> train_labels,
+                 RcppArrayFire::typed_array<s32> test_labels,
                  int num_classes) {
   int device = 0;
   try {
     af::setDevice(device);
     af::info();
   } catch (af::exception &ae) { std::cerr << ae.what() << std::endl; }
-  array train_feats = r_train_feats;
-  array test_feats = r_test_feats;
-  array train_labels =  r_train_labels;
-  array test_labels =  r_test_labels;
-  // array train_data, train_labels;
-  // array test_data, test_labels;
-  // std::cout << "Class name of train data is:";
-  // std::cout << typeid(train_data).name();
-  // af_print(train_data);
-
-// set up fraction to study
-//   setup_mnist<false>(&num_classes, &num_train, &num_test, train_images,
-//                      test_images, train_labels, test_labels, frac);
-//   int feature_length = train_images.elements() / num_train;
-//   array train_feats  = moddims(train_images, feature_length, num_train);
-//   array test_feats   = moddims(test_images, feature_length, num_test);
 //   // Get training parameters
   array mu, sig2;
   float *priors = new float[num_classes];
@@ -161,7 +144,7 @@ void naive_bayes(RcppArrayFire::typed_array<f32> r_train_feats,
 
 
 
-void naive_bayes_demo(int perc) {
+void naive_bayes_demo_run(int perc) {
   array train_images, train_labels;
   array test_images, test_labels;
   int num_train, num_test, num_classes;
@@ -205,13 +188,13 @@ void naive_bayes_demo(int perc) {
 
 //' @export
 // [[Rcpp::export]]
-void prandu_main(int perc) {
+void naive_bayes_demo(int perc) {
   // int device   = argc > 1 ? atoi(argv[1]) : 0;
   // bool console = argc > 2 ? argv[2][0] == '-' : false;
   // int perc     = argc > 3 ? atoi(argv[3]) : 60;
   af::setDevice(0);
   af::info();
-  naive_bayes_demo(perc);
+  naive_bayes_demo_run(perc);
   // try {
   //     af::setDevice(0);
   //     af::info();

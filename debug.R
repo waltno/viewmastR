@@ -35,10 +35,8 @@ naive_bayes(input_list[[1]], input_list[[2]], input_list[[3]], input_list[[4]], 
 
 
 test_backends()
-prandu_main(80)
-
-
-ann_main(0, 80, "f32")
+naive_bayes_demo(80)
+ann_demo(0, 80, "f32")
 
 
 usethis::use_build_ignore("debug.R")

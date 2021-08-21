@@ -202,8 +202,7 @@ double ann::train(const array &input, const array &target, double alpha,
 }
 
 
-
-static int ann_demo(int perc, const dtype dt) {
+static int ann_demo_run(int perc, const dtype dt) {
   printf("** ArrayFire ANN Demo **\n\n");
   array train_images, test_images;
   array train_target, test_target;
@@ -223,6 +222,16 @@ static int ann_demo(int perc, const dtype dt) {
   array test_feats  = moddims(test_images, feature_size, num_test).T();
   train_target = train_target.T();
   test_target  = test_target.T();
+  std::cout << "Train feature dims:" << std::endl;
+  std::cout << train_feats.dims() << std::endl;
+  std::cout << "Test feature dims:" << std::endl;
+  std::cout << test_feats.dims() << std::endl;
+  std::cout << "Train labels dims:" << std::endl;
+  std::cout << train_target.dims() << std::endl;
+  std::cout << "Test labels dims:" << std::endl;
+  std::cout << test_target.dims() << std::endl;
+  std::cout << "Num classes:" << std::endl;
+  std::cout << num_classes << std::endl;
   // Network parameters
   vector<int> layers;
   layers.push_back(train_feats.dims(1));
@@ -266,9 +275,97 @@ static int ann_demo(int perc, const dtype dt) {
   return 0;
 }
 
+
 //' @export
 // [[Rcpp::export]]
-int ann_main(int device, int perc, std::string dts) {
+int af_nn(RcppArrayFire::typed_array<f32> train_feats,
+                 RcppArrayFire::typed_array<f32> test_feats,
+                 RcppArrayFire::typed_array<s32> train_target,
+                 RcppArrayFire::typed_array<s32> test_target,
+                 int num_classes,
+                 int device = 0,
+                 std::string dts = "f32",
+                 float learning_rate = 2.0,    // learning rate / alpha
+                 int max_epochs = 250,    // max epochs
+                 int batch_size = 100,    // batch size
+                 float max_error = 0.5,    // max error
+                 bool verbose = true) {
+  printf("** ArrayFire ANN**\n\n");
+  if (device < 0 || device > 1) {
+    std::cerr << "Bad device: " <<device << std::endl;
+    return EXIT_FAILURE;
+  }
+  
+  dtype dt        = f32;
+  if (dts == "f16")
+    dt = f16;
+  else if (dts != "f32") {
+    std::cerr << "Unsupported datatype " << dts << ". Supported: f32 or f16"
+              << std::endl;
+    return EXIT_FAILURE;
+  }
+  
+  if (dts == "f16" && !af::isHalfAvailable(device)) {
+    std::cerr << "Half not available for device " << device << std::endl;
+    return EXIT_FAILURE;
+  }
+  try {
+    af::setDevice(device);
+    af::info();
+  } catch (af::exception &ae) { std::cerr << ae.what() << std::endl; }
+  // Reshape images into feature vectors
+  train_feats = train_feats.T();
+  test_feats  = test_feats.T();
+  train_target = train_target.T();
+  test_target  = test_target.T();
+  std::cout << "Train feature dims:" << std::endl;
+  std::cout << train_feats.dims() << std::endl;
+  std::cout << "Test feature dims:" << std::endl;
+  std::cout << test_feats.dims() << std::endl;
+  std::cout << "Train labels dims:" << std::endl;
+  std::cout << train_target.dims() << std::endl;
+  std::cout << "Test labels dims:" << std::endl;
+  std::cout << test_target.dims() << std::endl;
+  std::cout << "Num classes:" << std::endl;
+  std::cout << num_classes << std::endl;
+  // Network parameters
+  vector<int> layers;
+  layers.push_back(train_feats.dims(1));
+  layers.push_back(100);
+  layers.push_back(50);
+  layers.push_back(num_classes);
+  // Create network: architecture, range, datatype
+  ann network(layers, 0.05, dt);
+  // Train network
+  timer::start();
+  network.train(train_feats, train_target, learning_rate,
+                max_epochs, batch_size, max_error, verbose);
+  af::sync();
+  double train_time = timer::stop();
+  // Run the trained network and test accuracy.
+  array train_output = network.predict(train_feats);
+  array test_output  = network.predict(test_feats);
+  // Benchmark prediction
+  af::sync();
+  timer::start();
+  for (int i = 0; i < 100; i++) { network.predict(test_feats); }
+  af::sync();
+  double test_time = timer::stop() / 100;
+  printf("\nTraining set:\n");
+  printf("Accuracy on training data: %2.2f\n",
+         accuracy(train_output, train_target));
+  printf("\nTest set:\n");
+  printf("Accuracy on testing  data: %2.2f\n",
+         accuracy(test_output, test_target));
+  printf("\nTraining time: %4.4lf s\n", train_time);
+  printf("Prediction time: %4.4lf s\n\n", test_time);
+  return 0;
+}
+
+
+//' @export
+// [[Rcpp::export]]
+int ann_demo(int device, int perc, std::string dts) {
   if (device < 0 || device > 1) {
     std::cerr << "Bad device: " <<device << std::endl;
     return EXIT_FAILURE;
@@ -292,8 +389,15 @@ int ann_main(int device, int perc, std::string dts) {
   try {
     af::setDevice(device);
     af::info();
-    return ann_demo(perc, dt);
+    return ann_demo_run(perc, dt);
   } catch (af::exception &ae) { std::cerr << ae.what() << std::endl; }
   return 0;
+}
+
+
+//' @export
+// [[Rcpp::export]]
+int ann() {
+
 }
 

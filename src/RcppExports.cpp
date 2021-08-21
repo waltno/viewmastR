@@ -7,26 +7,26 @@
 using namespace Rcpp;
 
 // naive_bayes
-void naive_bayes(RcppArrayFire::typed_array<f32> r_train_feats, RcppArrayFire::typed_array<f32> r_test_feats, RcppArrayFire::typed_array<s32> r_train_labels, RcppArrayFire::typed_array<s32> r_test_labels, int num_classes);
-RcppExport SEXP _viewmaster_naive_bayes(SEXP r_train_featsSEXP, SEXP r_test_featsSEXP, SEXP r_train_labelsSEXP, SEXP r_test_labelsSEXP, SEXP num_classesSEXP) {
+void naive_bayes(RcppArrayFire::typed_array<f32> train_feats, RcppArrayFire::typed_array<f32> test_feats, RcppArrayFire::typed_array<s32> train_labels, RcppArrayFire::typed_array<s32> test_labels, int num_classes);
+RcppExport SEXP _viewmaster_naive_bayes(SEXP train_featsSEXP, SEXP test_featsSEXP, SEXP train_labelsSEXP, SEXP test_labelsSEXP, SEXP num_classesSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32> >::type r_train_feats(r_train_featsSEXP);
-    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32> >::type r_test_feats(r_test_featsSEXP);
-    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<s32> >::type r_train_labels(r_train_labelsSEXP);
-    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<s32> >::type r_test_labels(r_test_labelsSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32> >::type train_feats(train_featsSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32> >::type test_feats(test_featsSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<s32> >::type train_labels(train_labelsSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<s32> >::type test_labels(test_labelsSEXP);
     Rcpp::traits::input_parameter< int >::type num_classes(num_classesSEXP);
-    naive_bayes(r_train_feats, r_test_feats, r_train_labels, r_test_labels, num_classes);
+    naive_bayes(train_feats, test_feats, train_labels, test_labels, num_classes);
     return R_NilValue;
 END_RCPP
 }
-// prandu_main
-void prandu_main(int perc);
-RcppExport SEXP _viewmaster_prandu_main(SEXP percSEXP) {
+// naive_bayes_demo
+void naive_bayes_demo(int perc);
+RcppExport SEXP _viewmaster_naive_bayes_demo(SEXP percSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< int >::type perc(percSEXP);
-    prandu_main(perc);
+    naive_bayes_demo(perc);
     return R_NilValue;
 END_RCPP
 }
@@ -40,16 +40,48 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// ann_main
-int ann_main(int device, int perc, std::string dts);
-RcppExport SEXP _viewmaster_ann_main(SEXP deviceSEXP, SEXP percSEXP, SEXP dtsSEXP) {
+// af_nn
+int af_nn(RcppArrayFire::typed_array<f32> train_feats, RcppArrayFire::typed_array<f32> test_feats, RcppArrayFire::typed_array<s32> train_target, RcppArrayFire::typed_array<s32> test_target, int num_classes, int device, std::string dts, float learning_rate, int max_epochs, int batch_size, float max_error, bool verbose);
+RcppExport SEXP _viewmaster_af_nn(SEXP train_featsSEXP, SEXP test_featsSEXP, SEXP train_targetSEXP, SEXP test_targetSEXP, SEXP num_classesSEXP, SEXP deviceSEXP, SEXP dtsSEXP, SEXP learning_rateSEXP, SEXP max_epochsSEXP, SEXP batch_sizeSEXP, SEXP max_errorSEXP, SEXP verboseSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32> >::type train_feats(train_featsSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32> >::type test_feats(test_featsSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<s32> >::type train_target(train_targetSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<s32> >::type test_target(test_targetSEXP);
+    Rcpp::traits::input_parameter< int >::type num_classes(num_classesSEXP);
+    Rcpp::traits::input_parameter< int >::type device(deviceSEXP);
+    Rcpp::traits::input_parameter< std::string >::type dts(dtsSEXP);
+    Rcpp::traits::input_parameter< float >::type learning_rate(learning_rateSEXP);
+    Rcpp::traits::input_parameter< int >::type max_epochs(max_epochsSEXP);
+    Rcpp::traits::input_parameter< int >::type batch_size(batch_sizeSEXP);
+    Rcpp::traits::input_parameter< float >::type max_error(max_errorSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    rcpp_result_gen = Rcpp::wrap(af_nn(train_feats, test_feats, train_target, test_target, num_classes, device, dts, learning_rate, max_epochs, batch_size, max_error, verbose));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ann_demo
+int ann_demo(int device, int perc, std::string dts);
+RcppExport SEXP _viewmaster_ann_demo(SEXP deviceSEXP, SEXP percSEXP, SEXP dtsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< int >::type device(deviceSEXP);
     Rcpp::traits::input_parameter< int >::type perc(percSEXP);
     Rcpp::traits::input_parameter< std::string >::type dts(dtsSEXP);
-    rcpp_result_gen = Rcpp::wrap(ann_main(device, perc, dts));
+    rcpp_result_gen = Rcpp::wrap(ann_demo(device, perc, dts));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ann
+int ann();
+RcppExport SEXP _viewmaster_ann() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(ann());
     return rcpp_result_gen;
 END_RCPP
 }
@@ -70,9 +102,11 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_viewmaster_naive_bayes", (DL_FUNC) &_viewmaster_naive_bayes, 5},
-    {"_viewmaster_prandu_main", (DL_FUNC) &_viewmaster_prandu_main, 1},
+    {"_viewmaster_naive_bayes_demo", (DL_FUNC) &_viewmaster_naive_bayes_demo, 1},
     {"_viewmaster_test_backends", (DL_FUNC) &_viewmaster_test_backends, 0},
-    {"_viewmaster_ann_main", (DL_FUNC) &_viewmaster_ann_main, 3},
+    {"_viewmaster_af_nn", (DL_FUNC) &_viewmaster_af_nn, 12},
+    {"_viewmaster_ann_demo", (DL_FUNC) &_viewmaster_ann_demo, 3},
+    {"_viewmaster_ann", (DL_FUNC) &_viewmaster_ann, 0},
     {"_viewmaster_computeSparseRowVariances", (DL_FUNC) &_viewmaster_computeSparseRowVariances, 4},
     {NULL, NULL, 0}
 };

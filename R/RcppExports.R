@@ -2,13 +2,13 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #' @export
-naive_bayes <- function(r_train_feats, r_test_feats, r_train_labels, r_test_labels, num_classes) {
-    invisible(.Call('_viewmaster_naive_bayes', PACKAGE = 'viewmaster', r_train_feats, r_test_feats, r_train_labels, r_test_labels, num_classes))
+naive_bayes <- function(train_feats, test_feats, train_labels, test_labels, num_classes) {
+    invisible(.Call('_viewmaster_naive_bayes', PACKAGE = 'viewmaster', train_feats, test_feats, train_labels, test_labels, num_classes))
 }
 
 #' @export
-prandu_main <- function(perc) {
-    invisible(.Call('_viewmaster_prandu_main', PACKAGE = 'viewmaster', perc))
+naive_bayes_demo <- function(perc) {
+    invisible(.Call('_viewmaster_naive_bayes_demo', PACKAGE = 'viewmaster', perc))
 }
 
 #' @export
@@ -17,8 +17,18 @@ test_backends <- function() {
 }
 
 #' @export
-ann_main <- function(device, perc, dts) {
-    .Call('_viewmaster_ann_main', PACKAGE = 'viewmaster', device, perc, dts)
+af_nn <- function(train_feats, test_feats, train_target, test_target, num_classes, device = 0L, dts = "f32", learning_rate = 2.0, max_epochs = 250L, batch_size = 100L, max_error = 0.5, verbose = TRUE) {
+    .Call('_viewmaster_af_nn', PACKAGE = 'viewmaster', train_feats, test_feats, train_target, test_target, num_classes, device, dts, learning_rate, max_epochs, batch_size, max_error, verbose)
+}
+
+#' @export
+ann_demo <- function(device, perc, dts) {
+    .Call('_viewmaster_ann_demo', PACKAGE = 'viewmaster', device, perc, dts)
+}
+
+#' @export
+ann <- function() {
+    .Call('_viewmaster_ann', PACKAGE = 'viewmaster')
 }
 
 computeSparseRowVariances <- function(j, val, rm, n) {
