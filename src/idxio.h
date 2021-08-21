@@ -25,7 +25,7 @@ union Data {
     char bytes[4];
 };
 
-unsigned char reverse_char(unsigned char b) {
+static unsigned char reverse_char(unsigned char b) {
     b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
     b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
     b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
@@ -33,7 +33,7 @@ unsigned char reverse_char(unsigned char b) {
 }
 
 // http://stackoverflow.com/a/9144870/2192361
-unsigned reverse(unsigned x) {
+static unsigned reverse(unsigned x) {
     x = ((x >> 1) & 0x55555555u) | ((x & 0x55555555u) << 1);
     x = ((x >> 2) & 0x33333333u) | ((x & 0x33333333u) << 2);
     x = ((x >> 4) & 0x0f0f0f0fu) | ((x & 0x0f0f0f0fu) << 4);

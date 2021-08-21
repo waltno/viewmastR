@@ -1,9 +1,6 @@
 // we only include RcppArrayFire.h which pulls Rcpp.h in for us
 #include "RcppArrayFire.h"
 #include <arrayfire.h>
-#include <cstdio>
-#include <cstdlib>
-#include <arrayfire.h>
 #include <math.h>
 #include <stdio.h>
 #include <af/util.h>
@@ -31,11 +28,11 @@
 using namespace af;
 
 // Get accuracy of the predicted results
-float accuracy(const array &predicted, const array &target) {
+static float nb_accuracy(const array &predicted, const array &target) {
   return 100 * count<float>(predicted == target) / target.elements();
 }
 
-void naive_bayes_train(float *priors, array &mu, array &sig2,
+static void naive_bayes_train(float *priors, array &mu, array &sig2,
                        const array &train_feats, const array &train_classes,
                        int num_classes) {
   const int feat_len    = train_feats.dims(0);
@@ -60,7 +57,7 @@ void naive_bayes_train(float *priors, array &mu, array &sig2,
   sig2.eval();
 }
 
-array naive_bayes_predict(float *priors, const array &mu, const array &sig2,
+static array naive_bayes_predict(float *priors, const array &mu, const array &sig2,
                           const array &test_feats, int num_classes) {
   int num_test = test_feats.dims(1);
   // Predict the probabilities for testing data
@@ -83,7 +80,7 @@ array naive_bayes_predict(float *priors, const array &mu, const array &sig2,
   return idx;
 }
 
-void benchmark_nb(const array &train_feats, const array test_feats,
+static void benchmark_nb(const array &train_feats, const array test_feats,
                   const array &train_labels, int num_classes) {
   array mu, sig2;
   int iter      = 25;
@@ -151,7 +148,7 @@ void naive_bayes(RcppArrayFire::typed_array<f32> r_train_feats,
   delete[] priors;
 // //   // Results
   printf("Training samples: %4d, Testing samples: %4d\n", train_labels.dims(0), test_labels.dims(0));
-  printf("Accuracy on testing  data: %2.2f\n", accuracy(res_labels, test_labels));
+  printf("Accuracy on testing  data: %2.2f\n", nb_accuracy(res_labels, test_labels));
   benchmark_nb(train_feats, test_feats, train_labels, num_classes);
 //   if (!console) {
 //     test_images = test_images.T();
@@ -196,7 +193,7 @@ void naive_bayes_demo(int perc) {
   // Results
   printf("Trainng samples: %4d, Testing samples: %4d\n", num_train, num_test);
   printf("Accuracy on testing  data: %2.2f\n",
-         accuracy(res_labels, test_labels));
+         nb_accuracy(res_labels, test_labels));
   benchmark_nb(train_feats, test_feats, train_labels, num_classes);
   // if (!console) {
   //     test_images = test_images.T();
@@ -221,4 +218,3 @@ void prandu_main(int perc) {
   //     naive_bayes_demo(perc);
   // } catch (af::exception &ae) { std::cerr << ae.what() << std::endl; }
 }
-

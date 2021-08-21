@@ -30,16 +30,6 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
-// rcpparrayfire_hello_world
-af::array rcpparrayfire_hello_world();
-RcppExport SEXP _viewmaster_rcpparrayfire_hello_world() {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(rcpparrayfire_hello_world());
-    return rcpp_result_gen;
-END_RCPP
-}
 // test_backends
 int test_backends();
 RcppExport SEXP _viewmaster_test_backends() {
@@ -47,6 +37,19 @@ BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     rcpp_result_gen = Rcpp::wrap(test_backends());
+    return rcpp_result_gen;
+END_RCPP
+}
+// ann_main
+int ann_main(int device, int perc, std::string dts);
+RcppExport SEXP _viewmaster_ann_main(SEXP deviceSEXP, SEXP percSEXP, SEXP dtsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type device(deviceSEXP);
+    Rcpp::traits::input_parameter< int >::type perc(percSEXP);
+    Rcpp::traits::input_parameter< std::string >::type dts(dtsSEXP);
+    rcpp_result_gen = Rcpp::wrap(ann_main(device, perc, dts));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -68,8 +71,8 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_viewmaster_naive_bayes", (DL_FUNC) &_viewmaster_naive_bayes, 5},
     {"_viewmaster_prandu_main", (DL_FUNC) &_viewmaster_prandu_main, 1},
-    {"_viewmaster_rcpparrayfire_hello_world", (DL_FUNC) &_viewmaster_rcpparrayfire_hello_world, 0},
     {"_viewmaster_test_backends", (DL_FUNC) &_viewmaster_test_backends, 0},
+    {"_viewmaster_ann_main", (DL_FUNC) &_viewmaster_ann_main, 3},
     {"_viewmaster_computeSparseRowVariances", (DL_FUNC) &_viewmaster_computeSparseRowVariances, 4},
     {NULL, NULL, 0}
 };

@@ -11,13 +11,14 @@ prandu_main <- function(perc) {
     invisible(.Call('_viewmaster_prandu_main', PACKAGE = 'viewmaster', perc))
 }
 
-rcpparrayfire_hello_world <- function() {
-    .Call('_viewmaster_rcpparrayfire_hello_world', PACKAGE = 'viewmaster')
-}
-
 #' @export
 test_backends <- function() {
     .Call('_viewmaster_test_backends', PACKAGE = 'viewmaster')
+}
+
+#' @export
+ann_main <- function(device, perc, dts) {
+    .Call('_viewmaster_ann_main', PACKAGE = 'viewmaster', device, perc, dts)
 }
 
 computeSparseRowVariances <- function(j, val, rm, n) {
