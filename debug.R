@@ -10,7 +10,34 @@ setwd("~/develop/viewmaster")
 
 roxygen2::roxygenize(".")
 
-viewmaster::rcpparrayfire_test_backends()
+
+## arrayfire testing
+library(viewmaster)
+data(iris)
+data<-as.matrix(iris[,1:4])
+colnames(data)<-NULL
+labels<-iris$Species
+labn<-as.numeric(labels)-1
+labels<-levels(labels)
+
+train_frac<-0.8
+train_idx<-sample(1:dim(data)[1], round(train_frac*dim(data)[1]))
+test_idx<-which(!1:dim(data)[1] %in% train_idx)
+
+input_list<-list(t(data[train_idx,]), t(data[test_idx,]), labn[train_idx], labn[test_idx])
+dim(input_list[[1]])
+dim(input_list[[2]])
+length(input_list[[3]])
+length(input_list[[4]])
+
+
+naive_bayes(input_list[[1]], input_list[[2]], input_list[[3]], input_list[[4]], length(labels))
+
+
+test_backends()
+prandu_main(80)
+
+
 
 usethis::use_build_ignore("debug.R")
 usethis::use_build_ignore("debug.Rmd")

@@ -41,7 +41,7 @@ void testBackend()
 
 //' @export
 // [[Rcpp::export]]
-int rcpparrayfire_test_backends()
+int test_backends()
   {
     try {
       printf("Trying CPU Backend\n");
@@ -51,14 +51,14 @@ int rcpparrayfire_test_backends()
       printf("Caught exception when trying CPU backend\n");
       fprintf(stderr, "%s\n", e.what());
     }
-    try {
-      printf("Trying CUDA Backend\n");
-      af::setBackend(AF_BACKEND_CUDA);
-      testBackend();
-    } catch (af::exception& e) {
-      printf("Caught exception when trying CUDA backend\n");
-      fprintf(stderr, "%s\n", e.what());
-    }
+    // try {
+    //   printf("Trying CUDA Backend\n");
+    //   af::setBackend(AF_BACKEND_CUDA);
+    //   testBackend();
+    // } catch (af::exception& e) {
+    //   printf("Caught exception when trying CUDA backend\n");
+    //   fprintf(stderr, "%s\n", e.what());
+    // }
     try {
       printf("Trying OpenCL Backend\n");
       af::setBackend(AF_BACKEND_OPENCL);
@@ -69,4 +69,8 @@ int rcpparrayfire_test_backends()
     }
     return 0;
   }
+
+
+
+
 

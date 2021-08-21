@@ -6,6 +6,30 @@
 
 using namespace Rcpp;
 
+// naive_bayes
+void naive_bayes(RcppArrayFire::typed_array<f32> r_train_feats, RcppArrayFire::typed_array<f32> r_test_feats, RcppArrayFire::typed_array<s32> r_train_labels, RcppArrayFire::typed_array<s32> r_test_labels, int num_classes);
+RcppExport SEXP _viewmaster_naive_bayes(SEXP r_train_featsSEXP, SEXP r_test_featsSEXP, SEXP r_train_labelsSEXP, SEXP r_test_labelsSEXP, SEXP num_classesSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32> >::type r_train_feats(r_train_featsSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32> >::type r_test_feats(r_test_featsSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<s32> >::type r_train_labels(r_train_labelsSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<s32> >::type r_test_labels(r_test_labelsSEXP);
+    Rcpp::traits::input_parameter< int >::type num_classes(num_classesSEXP);
+    naive_bayes(r_train_feats, r_test_feats, r_train_labels, r_test_labels, num_classes);
+    return R_NilValue;
+END_RCPP
+}
+// prandu_main
+void prandu_main(int perc);
+RcppExport SEXP _viewmaster_prandu_main(SEXP percSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type perc(percSEXP);
+    prandu_main(perc);
+    return R_NilValue;
+END_RCPP
+}
 // rcpparrayfire_hello_world
 af::array rcpparrayfire_hello_world();
 RcppExport SEXP _viewmaster_rcpparrayfire_hello_world() {
@@ -16,13 +40,13 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// rcpparrayfire_test_backends
-int rcpparrayfire_test_backends();
-RcppExport SEXP _viewmaster_rcpparrayfire_test_backends() {
+// test_backends
+int test_backends();
+RcppExport SEXP _viewmaster_test_backends() {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(rcpparrayfire_test_backends());
+    rcpp_result_gen = Rcpp::wrap(test_backends());
     return rcpp_result_gen;
 END_RCPP
 }
@@ -42,8 +66,10 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_viewmaster_naive_bayes", (DL_FUNC) &_viewmaster_naive_bayes, 5},
+    {"_viewmaster_prandu_main", (DL_FUNC) &_viewmaster_prandu_main, 1},
     {"_viewmaster_rcpparrayfire_hello_world", (DL_FUNC) &_viewmaster_rcpparrayfire_hello_world, 0},
-    {"_viewmaster_rcpparrayfire_test_backends", (DL_FUNC) &_viewmaster_rcpparrayfire_test_backends, 0},
+    {"_viewmaster_test_backends", (DL_FUNC) &_viewmaster_test_backends, 0},
     {"_viewmaster_computeSparseRowVariances", (DL_FUNC) &_viewmaster_computeSparseRowVariances, 4},
     {NULL, NULL, 0}
 };
