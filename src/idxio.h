@@ -45,8 +45,8 @@ static unsigned reverse(unsigned x) {
 template<class ty>
 void read_idx(std::vector<dim_t> &dims, std::vector<ty> &data,
               const char *name) {
-    std::cout << "Opening data file:\n";
-    std::cout << name << "\n";
+    std::cerr << "Opening data file:\n";
+    std::cerr << name << "\n";
     std::ifstream f(name, std::ios::in | std::ios::binary);
     if (!f.is_open()) throw std::runtime_error("Unable to open file");
 

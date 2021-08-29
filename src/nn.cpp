@@ -37,27 +37,27 @@ static void testBackend()
 int test_backends()
   {
     try {
-      printf("Trying CPU Backend\n");
+      fprintf(stderr,"Trying CPU Backend\n");
       setBackend(AF_BACKEND_CPU);
       testBackend();
     } catch (exception& e) {
-      printf("Caught exception when trying CPU backend\n");
+      fprintf(stderr,"Caught exception when trying CPU backend\n");
       fprintf(stderr, "%s\n", e.what());
     }
     // try {
-    //   printf("Trying CUDA Backend\n");
+    //   fprintf(stderr,"Trying CUDA Backend\n");
     //   af::setBackend(AF_BACKEND_CUDA);
     //   testBackend();
     // } catch (af::exception& e) {
-    //   printf("Caught exception when trying CUDA backend\n");
+    //   fprintf(stderr,"Caught exception when trying CUDA backend\n");
     //   fprintf(stderr, "%s\n", e.what());
     // }
     try {
-      printf("Trying OpenCL Backend\n");
+      fprintf(stderr, "Trying OpenCL Backend\n");
       setBackend(AF_BACKEND_OPENCL);
       testBackend();
     } catch (exception& e) {
-      printf("Caught exception when trying OpenCL backend\n");
+      fprintf(stderr,"Caught exception when trying OpenCL backend\n");
       fprintf(stderr, "%s\n", e.what());
     }
     return 0;
@@ -149,7 +149,7 @@ void ann::back_propagate(const vector<array> signal, const array &target,
 
 ann::ann(vector<int> layers, double range, dtype dt)
   : num_layers(layers.size()), weights(layers.size() - 1), datatype(dt) {
-  std::cout
+  std::cerr
   << "Initializing weights using a random uniformly distribution between "
   << -range / 2 << " and " << range / 2 << " at precision "
   << toStr(datatype) << std::endl;
@@ -190,20 +190,20 @@ double ann::train(const array &input, const array &target, double alpha,
     err       = error(out, target(seq(st, en), span));
     // Check if convergence criteria has been met
     if (err < maxerr) {
-      printf("Converged on Epoch: %4d\n", i + 1);
+      fprintf(stderr,"Converged on Epoch: %4d\n", i + 1);
       return err;
     }
     if (verbose) {
       if ((i + 1) % 10 == 0)
-        printf("Epoch: %4d, Error: %0.4f\n", i + 1, err);
+        fprintf(stderr,"Epoch: %4d, Error: %0.4f\n", i + 1, err);
     }
   }
   return err;
 }
 
 
-static int ann_demo_run(int perc, const dtype dt) {
-  printf("** ArrayFire ANN Demo **\n\n");
+static int ann_demo_run(int perc, const dtype dt, bool verbose = false) {
+  fprintf(stderr,"** ArrayFire ANN Demo **\n");
   array train_images, test_images;
   array train_target, test_target;
   int num_classes, num_train, num_test;
@@ -222,16 +222,18 @@ static int ann_demo_run(int perc, const dtype dt) {
   array test_feats  = moddims(test_images, feature_size, num_test).T();
   train_target = train_target.T();
   test_target  = test_target.T();
-  std::cout << "Train feature dims:" << std::endl;
-  std::cout << train_feats.dims() << std::endl;
-  std::cout << "Test feature dims:" << std::endl;
-  std::cout << test_feats.dims() << std::endl;
-  std::cout << "Train labels dims:" << std::endl;
-  std::cout << train_target.dims() << std::endl;
-  std::cout << "Test labels dims:" << std::endl;
-  std::cout << test_target.dims() << std::endl;
-  std::cout << "Num classes:" << std::endl;
-  std::cout << num_classes << std::endl;
+  if(verbose){
+    std::cerr << "Train feature dims:" << std::endl;
+    std::cerr << train_feats.dims() << std::endl;
+    std::cerr << "Test feature dims:" << std::endl;
+    std::cerr << test_feats.dims() << std::endl;
+    std::cerr << "Train labels dims:" << std::endl;
+    std::cerr << train_target.dims() << std::endl;
+    std::cerr << "Test labels dims:" << std::endl;
+    std::cerr << test_target.dims() << std::endl;
+    std::cerr << "Num classes:" << std::endl;
+    std::cerr << num_classes << std::endl;
+  }
   // Network parameters
   vector<int> layers;
   layers.push_back(train_feats.dims(1));
@@ -259,14 +261,14 @@ static int ann_demo_run(int perc, const dtype dt) {
   for (int i = 0; i < 100; i++) { network.predict(test_feats); }
   af::sync();
   double test_time = timer::stop() / 100;
-  printf("\nTraining set:\n");
-  printf("Accuracy on training data: %2.2f\n",
+  fprintf(stderr,"\nTraining set:\n");
+  fprintf(stderr,"Accuracy on training data: %2.2f\n",
          accuracy(train_output, train_target));
-  printf("\nTest set:\n");
-  printf("Accuracy on testing  data: %2.2f\n",
+  fprintf(stderr,"\nTest set:\n");
+  fprintf(stderr,"Accuracy on testing  data: %2.2f\n",
          accuracy(test_output, test_target));
-  printf("\nTraining time: %4.4lf s\n", train_time);
-  printf("Prediction time: %4.4lf s\n\n", test_time);
+  fprintf(stderr,"\nTraining time: %4.4lf s\n", train_time);
+  fprintf(stderr,"Prediction time: %4.4lf s\n\n", test_time);
   // if (!console) {
   //   // Get 20 random test images.
   //   test_output = test_output.T();
@@ -278,11 +280,12 @@ static int ann_demo_run(int perc, const dtype dt) {
 
 //' @export
 // [[Rcpp::export]]
-int af_nn(RcppArrayFire::typed_array<f32> train_feats,
+af::array af_nn(RcppArrayFire::typed_array<f32> train_feats,
                  RcppArrayFire::typed_array<f32> test_feats,
                  RcppArrayFire::typed_array<s32> train_target,
                  RcppArrayFire::typed_array<s32> test_target,
                  int num_classes,
+                 RcppArrayFire::typed_array<f32> query_feats,
                  int device = 0,
                  std::string dts = "f32",
                  float learning_rate = 2.0,    // learning rate / alpha
@@ -290,7 +293,7 @@ int af_nn(RcppArrayFire::typed_array<f32> train_feats,
                  int batch_size = 100,    // batch size
                  float max_error = 0.5,    // max error
                  bool verbose = true) {
-  printf("** ArrayFire ANN**\n\n");
+  fprintf(stderr,"** ArrayFire ANN**\n");
   if (device < 0 || device > 1) {
     std::cerr << "Bad device: " <<device << std::endl;
     return EXIT_FAILURE;
@@ -311,23 +314,26 @@ int af_nn(RcppArrayFire::typed_array<f32> train_feats,
   }
   try {
     af::setDevice(device);
-    af::info();
+    std::string info_string = af::infoString();
+    std::cerr << info_string;
   } catch (af::exception &ae) { std::cerr << ae.what() << std::endl; }
   // Reshape images into feature vectors
   train_feats = train_feats.T();
   test_feats  = test_feats.T();
   train_target = train_target.T();
   test_target  = test_target.T();
-  std::cout << "Train feature dims:" << std::endl;
-  std::cout << train_feats.dims() << std::endl;
-  std::cout << "Test feature dims:" << std::endl;
-  std::cout << test_feats.dims() << std::endl;
-  std::cout << "Train labels dims:" << std::endl;
-  std::cout << train_target.dims() << std::endl;
-  std::cout << "Test labels dims:" << std::endl;
-  std::cout << test_target.dims() << std::endl;
-  std::cout << "Num classes:" << std::endl;
-  std::cout << num_classes << std::endl;
+  if(verbose){
+    std::cerr << "Train feature dims:" << std::endl;
+    std::cerr << train_feats.dims() << std::endl;
+    std::cerr << "Test feature dims:" << std::endl;
+    std::cerr << test_feats.dims() << std::endl;
+    std::cerr << "Train labels dims:" << std::endl;
+    std::cerr << train_target.dims() << std::endl;
+    std::cerr << "Test labels dims:" << std::endl;
+    std::cerr << test_target.dims() << std::endl;
+    std::cerr << "Num classes:" << std::endl;
+    std::cerr << num_classes << std::endl;
+  }
   // Network parameters
   vector<int> layers;
   layers.push_back(train_feats.dims(1));
@@ -345,21 +351,23 @@ int af_nn(RcppArrayFire::typed_array<f32> train_feats,
   // Run the trained network and test accuracy.
   array train_output = network.predict(train_feats);
   array test_output  = network.predict(test_feats);
+  // array query_output  = network.predict(query_feats);
   // Benchmark prediction
   af::sync();
   timer::start();
   for (int i = 0; i < 100; i++) { network.predict(test_feats); }
   af::sync();
   double test_time = timer::stop() / 100;
-  printf("\nTraining set:\n");
-  printf("Accuracy on training data: %2.2f\n",
+  fprintf(stderr,"\nTraining set:\n");
+  fprintf(stderr,"Accuracy on training data: %2.2f\n",
          accuracy(train_output, train_target));
-  printf("\nTest set:\n");
-  printf("Accuracy on testing  data: %2.2f\n",
+  fprintf(stderr,"\nTest set:\n");
+  fprintf(stderr,"Accuracy on testing  data: %2.2f\n",
          accuracy(test_output, test_target));
-  printf("\nTraining time: %4.4lf s\n", train_time);
-  printf("Prediction time: %4.4lf s\n\n", test_time);
-  return 0;
+  fprintf(stderr,"\nTraining time: %4.4lf s\n", train_time);
+  fprintf(stderr,"Prediction time: %4.4lf s\n\n", test_time);
+  array query_output  = network.predict(query_feats);
+  return query_output;
 }
 
 
@@ -388,16 +396,12 @@ int ann_demo(int device, int perc, std::string dts) {
   }
   try {
     af::setDevice(device);
-    af::info();
+    std::string info_string = af::infoString();
+    std::cerr << info_string;
     return ann_demo_run(perc, dt);
   } catch (af::exception &ae) { std::cerr << ae.what() << std::endl; }
   return 0;
 }
 
 
-//' @export
-// [[Rcpp::export]]
-int ann() {
-
-}
 

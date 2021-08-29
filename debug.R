@@ -31,13 +31,16 @@ length(input_list[[3]])
 length(input_list[[4]])
 
 
-naive_bayes(input_list[[1]], input_list[[2]], input_list[[3]], input_list[[4]], length(labels))
+naive_bayes(input_list[[1]], input_list[[2]], input_list[[3]], input_list[[4]], length(labels), query = input_list[[2]])
 
 
 test_backends()
 naive_bayes_demo(80)
 ann_demo(0, 80, "f32")
 
+bagging_demo()
+
+bagging(t(input_list[[1]]), t(input_list[[2]]), input_list[[3]], input_list[[4]], length(labels), query = input_list[[2]])
 
 usethis::use_build_ignore("debug.R")
 usethis::use_build_ignore("debug.Rmd")

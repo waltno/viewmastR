@@ -2,8 +2,18 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #' @export
-naive_bayes <- function(train_feats, test_feats, train_labels, test_labels, num_classes) {
-    invisible(.Call('_viewmaster_naive_bayes', PACKAGE = 'viewmaster', train_feats, test_feats, train_labels, test_labels, num_classes))
+bagging_demo <- function(perc = 50L, verbose = TRUE) {
+    invisible(.Call('_viewmaster_bagging_demo', PACKAGE = 'viewmaster', perc, verbose))
+}
+
+#' @export
+bagging <- function(train_feats, test_feats, train_labels, test_labels, num_classes, query, verbose = FALSE, num_models = 10L, sample_size = 1000L, device = 0L) {
+    .Call('_viewmaster_bagging', PACKAGE = 'viewmaster', train_feats, test_feats, train_labels, test_labels, num_classes, query, verbose, num_models, sample_size, device)
+}
+
+#' @export
+naive_bayes <- function(train_feats, test_feats, train_labels, test_labels, num_classes, query, verbose = FALSE, device = 0L) {
+    .Call('_viewmaster_naive_bayes', PACKAGE = 'viewmaster', train_feats, test_feats, train_labels, test_labels, num_classes, query, verbose, device)
 }
 
 #' @export
@@ -17,18 +27,13 @@ test_backends <- function() {
 }
 
 #' @export
-af_nn <- function(train_feats, test_feats, train_target, test_target, num_classes, device = 0L, dts = "f32", learning_rate = 2.0, max_epochs = 250L, batch_size = 100L, max_error = 0.5, verbose = TRUE) {
-    .Call('_viewmaster_af_nn', PACKAGE = 'viewmaster', train_feats, test_feats, train_target, test_target, num_classes, device, dts, learning_rate, max_epochs, batch_size, max_error, verbose)
+af_nn <- function(train_feats, test_feats, train_target, test_target, num_classes, query_feats, device = 0L, dts = "f32", learning_rate = 2.0, max_epochs = 250L, batch_size = 100L, max_error = 0.5, verbose = TRUE) {
+    .Call('_viewmaster_af_nn', PACKAGE = 'viewmaster', train_feats, test_feats, train_target, test_target, num_classes, query_feats, device, dts, learning_rate, max_epochs, batch_size, max_error, verbose)
 }
 
 #' @export
 ann_demo <- function(device, perc, dts) {
     .Call('_viewmaster_ann_demo', PACKAGE = 'viewmaster', device, perc, dts)
-}
-
-#' @export
-ann <- function() {
-    .Call('_viewmaster_ann', PACKAGE = 'viewmaster')
 }
 
 computeSparseRowVariances <- function(j, val, rm, n) {

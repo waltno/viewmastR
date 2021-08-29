@@ -40,9 +40,9 @@ static void naive_bayes_train(float *priors, array &mu, array &sig2,
   // Get mean and variance from trianing data
   mu   = constant(0, feat_len, num_classes);
   sig2 = constant(0, feat_len, num_classes);
-  // std::cout << "Mu:" << std::endl;
+  // std::cerr << "Mu:" << std::endl;
   // af_print(mu);
-  // std::cout << "Sig2:" << std::endl;
+  // std::cerr << "Sig2:" << std::endl;
   // af_print(sig2);
   for (int ii = 0; ii < num_classes; ii++) {
     array idx            = where(train_classes == ii);
@@ -58,7 +58,7 @@ static void naive_bayes_train(float *priors, array &mu, array &sig2,
 }
 
 static array naive_bayes_predict(float *priors, const array &mu, const array &sig2,
-                          const array &test_feats, int num_classes) {
+                          const array &test_feats, int &num_classes) {
   int num_test = test_feats.dims(1);
   // Predict the probabilities for testing data
   // Using log of probabilities to reduce rounding errors
@@ -80,8 +80,8 @@ static array naive_bayes_predict(float *priors, const array &mu, const array &si
   return idx;
 }
 
-static void benchmark_nb(const array &train_feats, const array test_feats,
-                  const array &train_labels, int num_classes) {
+static void benchmark_nb(const array &train_feats, const array &test_feats,
+                  const array &train_labels, int &num_classes) {
   array mu, sig2;
   int iter      = 25;
   float *priors = new float[num_classes];
@@ -90,48 +90,53 @@ static void benchmark_nb(const array &train_feats, const array test_feats,
     naive_bayes_train(priors, mu, sig2, train_feats, train_labels, num_classes);
   }
   af::sync();
-  printf("Training time: %4.4lf s\n", timer::stop() / iter);
+  fprintf(stderr,"Training time: %4.4lf s\n", timer::stop() / iter);
   timer::start();
   for (int i = 0; i < iter; i++) {
     naive_bayes_predict(priors, mu, sig2, test_feats, num_classes);
   }
   af::sync();
-  printf("Prediction time: %4.4lf s\n", timer::stop() / iter);
+  fprintf(stderr,"Prediction time: %4.4lf s\n", timer::stop() / iter);
   delete[] priors;
 }
 
 //' @export
 // [[Rcpp::export]]
-void naive_bayes(RcppArrayFire::typed_array<f32> train_feats,
+af::array naive_bayes(RcppArrayFire::typed_array<f32> train_feats,
                  RcppArrayFire::typed_array<f32> test_feats,
                  RcppArrayFire::typed_array<s32> train_labels,
                  RcppArrayFire::typed_array<s32> test_labels,
-                 int num_classes) {
-  int device = 0;
+                 int num_classes,
+                 RcppArrayFire::typed_array<f32> query,
+                 bool verbose = false,
+                 int device = 0) {
   try {
     af::setDevice(device);
-    af::info();
+    std::string info_string = af::infoString();
+    std::cerr << info_string;
   } catch (af::exception &ae) { std::cerr << ae.what() << std::endl; }
 //   // Get training parameters
   array mu, sig2;
   float *priors = new float[num_classes];
-  std::cout << "Train feature dims:" << std::endl;
-  std::cout << train_feats.dims() << std::endl;
-  std::cout << "Test feature dims:" << std::endl;
-  std::cout << test_feats.dims() << std::endl;
-  std::cout << "Train labels dims:" << std::endl;
-  std::cout << train_labels.dims() << std::endl;
-  std::cout << "Test labels dims:" << std::endl;
-  std::cout << test_labels.dims() << std::endl;
-  std::cout << "Num classes:" << std::endl;
-  std::cout << num_classes << std::endl;
+  if(verbose){
+    std::cerr << "Train feature dims:" << std::endl;
+    std::cerr << train_feats.dims() << std::endl;
+    std::cerr << "Test feature dims:" << std::endl;
+    std::cerr << test_feats.dims() << std::endl;
+    std::cerr << "Train labels dims:" << std::endl;
+    std::cerr << train_labels.dims() << std::endl;
+    std::cerr << "Test labels dims:" << std::endl;
+    std::cerr << test_labels.dims() << std::endl;
+    std::cerr << "Num classes:" << std::endl;
+    std::cerr << num_classes << std::endl;
+  }
   naive_bayes_train(priors, mu, sig2, train_feats, train_labels, num_classes);
   // Predict the classes
   array res_labels = naive_bayes_predict(priors, mu, sig2, test_feats, num_classes);
-  delete[] priors;
+  // delete[] priors;
 // //   // Results
-  printf("Training samples: %4d, Testing samples: %4d\n", train_labels.dims(0), test_labels.dims(0));
-  printf("Accuracy on testing  data: %2.2f\n", nb_accuracy(res_labels, test_labels));
+  fprintf(stderr,"Training samples: %4d, Testing samples: %4d\n", train_labels.dims(0), test_labels.dims(0));
+  fprintf(stderr,"Accuracy on testing  data: %2.2f\n", nb_accuracy(res_labels, test_labels));
   benchmark_nb(train_feats, test_feats, train_labels, num_classes);
 //   if (!console) {
 //     test_images = test_images.T();
@@ -139,12 +144,15 @@ void naive_bayes(RcppArrayFire::typed_array<f32> train_feats,
 //     // FIXME: Crashing in mnist_common.h::classify
 //     // display_results<false>(test_images, res_labels, test_labels , 20);
 //   }
+// return query
+  af::array query_labels = naive_bayes_predict(priors, mu, sig2, query, num_classes);
+  return query_labels;
 }
 
 
 
 
-void naive_bayes_demo_run(int perc) {
+void naive_bayes_demo_run(int perc, bool verbose = false) {
   array train_images, train_labels;
   array test_images, test_labels;
   int num_train, num_test, num_classes;
@@ -157,16 +165,18 @@ void naive_bayes_demo_run(int perc) {
   array test_feats   = moddims(test_images, feature_length, num_test);
   // Get training parameters
   array mu, sig2;
-  std::cout << "Train feature dims:" << std::endl;
-  std::cout << train_feats.dims() << std::endl;
-  std::cout << "Test feature dims:" << std::endl;
-  std::cout << test_feats.dims() << std::endl;
-  std::cout << "Train labels dims:" << std::endl;
-  std::cout << train_labels.dims() << std::endl;
-  std::cout << "Test labels dims:" << std::endl;
-  std::cout << test_labels.dims() << std::endl;
-  std::cout << "Num classes:" << std::endl;
-  std::cout << num_classes << std::endl;
+  if(verbose){
+    std::cerr << "Train feature dims:" << std::endl;
+    std::cerr << train_feats.dims() << std::endl;
+    std::cerr << "Test feature dims:" << std::endl;
+    std::cerr << test_feats.dims() << std::endl;
+    std::cerr << "Train labels dims:" << std::endl;
+    std::cerr << train_labels.dims() << std::endl;
+    std::cerr << "Test labels dims:" << std::endl;
+    std::cerr << test_labels.dims() << std::endl;
+    std::cerr << "Num classes:" << std::endl;
+    std::cerr << num_classes << std::endl;
+  }
   float *priors = new float[num_classes];
   naive_bayes_train(priors, mu, sig2, train_feats, train_labels, num_classes);
   // Predict the classes
@@ -174,8 +184,8 @@ void naive_bayes_demo_run(int perc) {
     naive_bayes_predict(priors, mu, sig2, test_feats, num_classes);
   delete[] priors;
   // Results
-  printf("Trainng samples: %4d, Testing samples: %4d\n", num_train, num_test);
-  printf("Accuracy on testing  data: %2.2f\n",
+  fprintf(stderr,"Trainng samples: %4d, Testing samples: %4d\n", num_train, num_test);
+  fprintf(stderr,"Accuracy on testing  data: %2.2f\n",
          nb_accuracy(res_labels, test_labels));
   benchmark_nb(train_feats, test_feats, train_labels, num_classes);
   // if (!console) {
@@ -193,7 +203,8 @@ void naive_bayes_demo(int perc) {
   // bool console = argc > 2 ? argv[2][0] == '-' : false;
   // int perc     = argc > 3 ? atoi(argv[3]) : 60;
   af::setDevice(0);
-  af::info();
+  std::string info_string = af::infoString();
+  std::cerr << info_string;
   naive_bayes_demo_run(perc);
   // try {
   //     af::setDevice(0);
