@@ -134,7 +134,7 @@ af::array bagging(RcppArrayFire::typed_array<f32> train_feats,
                       RcppArrayFire::typed_array<s32> test_labels,
                       int num_classes,
                       RcppArrayFire::typed_array<f32> query,
-                      bool verbose = false,
+                      bool verbose = true,
                       int num_models  = 10,
                       int sample_size = 1000,
                       int device = 0) {
@@ -143,9 +143,11 @@ af::array bagging(RcppArrayFire::typed_array<f32> train_feats,
     std::string info_string = af::infoString();
     std::cerr << info_string;
   } catch (af::exception &ae) { std::cerr << ae.what() << std::endl; }
+  
+  train_feats = train_feats.T();
+  test_feats  = test_feats.T();
+  query= query.T();
   //   // Get training parameters
-  array mu, sig2;
-  float *priors = new float[num_classes];
   if(verbose){
     std::cerr << "Train feature dims:" << std::endl;
     std::cerr << train_feats.dims() << std::endl;

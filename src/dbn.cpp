@@ -26,46 +26,7 @@
 
 using namespace af;
 
-static void testBackend()
-{
-  info();
-  af_print(randu(5, 4));
-}
-
-//' @export
-// [[Rcpp::export]]
-int test_backends()
-  {
-    try {
-      fprintf(stderr,"Trying CPU Backend\n");
-      setBackend(AF_BACKEND_CPU);
-      testBackend();
-    } catch (exception& e) {
-      fprintf(stderr,"Caught exception when trying CPU backend\n");
-      fprintf(stderr, "%s\n", e.what());
-    }
-    // try {
-    //   fprintf(stderr,"Trying CUDA Backend\n");
-    //   af::setBackend(AF_BACKEND_CUDA);
-    //   testBackend();
-    // } catch (af::exception& e) {
-    //   fprintf(stderr,"Caught exception when trying CUDA backend\n");
-    //   fprintf(stderr, "%s\n", e.what());
-    // }
-    try {
-      fprintf(stderr, "Trying OpenCL Backend\n");
-      setBackend(AF_BACKEND_OPENCL);
-      testBackend();
-    } catch (exception& e) {
-      fprintf(stderr,"Caught exception when trying OpenCL backend\n");
-      fprintf(stderr, "%s\n", e.what());
-    }
-    return 0;
-  }
-
-
 using std::vector;
-
 
 static std::string toStr(const dtype dt) {
   switch (dt) {
@@ -90,119 +51,169 @@ static double error(const array &out, const array &pred) {
   return sqrt((double)(sum<float>(dif * dif)));
 }
 
-class ann {
+static array sigmoid_binary(const array in) {
+  // Choosing "1" with probability sigmoid(in)
+  return (sigmoid(in) > randu(in.dims())).as(f32);
+}
+
+class rbm {
 private:
-  int num_layers;
-  vector<array> weights;
-  dtype datatype;
-  // Add bias input to the output from previous layer
-  array add_bias(const array &in);
-  vector<array> forward_propagate(const array &input);
-  void back_propagate(const vector<array> signal, const array &pred,
-                      const double &alpha);
+  array weights;
+  array h_bias;
+  array v_bias;
 public:
-  // Create a network with given parameters
-  ann(vector<int> layers, double range, dtype dt = f32);
-  // Output after single pass of forward propagation
-  array predict(const array &input);
-  // Method to train the neural net
-  double train(const array &input, const array &target, double alpha = 1.0,
-               int max_epochs = 300, int batch_size = 100,
-               double maxerr = 1.0, bool verbose = false);
+  rbm(int v_size, int h_size)
+    : weights(randu(h_size, v_size) / 100.f)
+  , h_bias(constant(0, 1, h_size))
+  , v_bias(constant(0, 1, v_size)) {}
+  array get_weights() {
+    return transpose(join(1, weights, transpose(h_bias)));
+  }
+  void train(const array &in, double lr, int num_epochs, int batch_size,
+             bool verbose) {
+    const int num_samples = in.dims(0);
+    const int num_batches = num_samples / batch_size;
+    for (int i = 0; i < num_epochs; i++) {
+      double err = 0;
+      for (int j = 0; j < num_batches - 1; j++) {
+        int st  = j * batch_size;
+        int en  = std::min(num_samples - 1, st + batch_size - 1);
+        int num = en - st + 1;
+        array v_pos = in(seq(st, en), span);
+        array h_pos = sigmoid_binary(tile(h_bias, num) +
+          matmulNT(v_pos, weights));
+        array v_neg =
+          sigmoid_binary(tile(v_bias, num) + matmul(h_pos, weights));
+        array h_neg = sigmoid_binary(tile(h_bias, num) +
+          matmulNT(v_neg, weights));
+        array c_pos = matmulTN(h_pos, v_pos);
+        array c_neg = matmulTN(h_neg, v_neg);
+        array delta_w  = lr * (c_pos - c_neg) / num;
+        array delta_vb = lr * sum(v_pos - v_neg) / num;
+        array delta_hb = lr * sum(h_pos - h_neg) / num;
+        weights += delta_w;
+        v_bias += delta_vb;
+        h_bias += delta_hb;
+        if (verbose) { err += error(v_pos, v_neg); }
+      }
+      if (verbose) {
+        printf("Epoch %d: Reconstruction error: %0.4f\n", i + 1,
+               err / num_batches);
+      }
+    }
+  }
+  array prop_up(const array &in) {
+    return sigmoid(tile(h_bias, in.dims(0)) + matmulNT(in, weights));
+  }
 };
-array ann::add_bias(const array &in) {
-  // Bias input is added on top of given input
-  return join(1, constant(1, in.dims(0), 1, datatype), in);
-}
-vector<array> ann::forward_propagate(const array &input) {
-  // Get activations at each layer
-  vector<array> signal(num_layers);
-  signal[0] = input;
-  for (int i = 0; i < num_layers - 1; i++) {
-    array in      = add_bias(signal[i]);
-    array out     = matmul(in, weights[i]);
-    signal[i + 1] = sigmoid(out);
+
+class dbn {
+private:
+  const int in_size;
+  const int out_size;
+  const int num_hidden;
+  const int num_total;
+  std::vector<array> weights;
+  std::vector<int> hidden;
+  array add_bias(const array &in) {
+    // Bias input is added on top of given input
+    return join(1, constant(1, in.dims(0), 1), in);
   }
-  return signal;
-}
-
-void ann::back_propagate(const vector<array> signal, const array &target,
-                         const double &alpha) {
-  // Get error for output layer
-  array out = signal[num_layers - 1];
-  array err = (out - target);
-  int m = target.dims(0);
-  for (int i = num_layers - 2; i >= 0; i--) {
-    array in    = add_bias(signal[i]);
-    array delta = (deriv(out) * err).T();
-    // Adjust weights
-    array tg   = alpha * matmul(delta, in);
-    array grad = -(tg) / m;
-    weights[i] += grad.T();
-    // Input to current layer is output of previous
-    out = signal[i];
-    err = matmulTT(delta, weights[i]);
-    // Remove the error of bias and propagate backward
-    err = err(span, seq(1, out.dims(1)));
-  }
-}
-
-ann::ann(vector<int> layers, double range, dtype dt)
-  : num_layers(layers.size()), weights(layers.size() - 1), datatype(dt) {
-  std::cerr
-  << "Initializing weights using a random uniformly distribution between "
-  << -range / 2 << " and " << range / 2 << " at precision "
-  << toStr(datatype) << std::endl;
-  for (int i = 0; i < num_layers - 1; i++) {
-    weights[i] = range * randu(layers[i] + 1, layers[i + 1]) - range / 2;
-    if (datatype != f32) weights[i] = weights[i].as(datatype);
-  }
-}
-
-array ann::predict(const array &input) {
-  vector<array> signal = forward_propagate(input);
-  array out            = signal[num_layers - 1];
-  return out;
-}
-
-double ann::train(const array &input, const array &target, double alpha,
-                  int max_epochs, int batch_size, double maxerr, bool verbose) {
-  const int num_samples = input.dims(0);
-  const int num_batches = num_samples / batch_size;
-  double err = 0;
-  // Training the entire network
-  for (int i = 0; i < max_epochs; i++) {
-    for (int j = 0; j < num_batches - 1; j++) {
-      int st = j * batch_size;
-      int en = st + batch_size - 1;
-      array x = input(seq(st, en), span);
-      array y = target(seq(st, en), span);
-      // Propagate the inputs forward
-      vector<array> signals = forward_propagate(x);
-      array out             = signals[num_layers - 1];
-      // Propagate the error backward
-      back_propagate(signals, y, alpha);
+  vector<array> forward_propagate(const array &input) {
+    // Get activations at each layer
+    vector<array> signal(num_total);
+    signal[0] = input;
+    for (int i = 0; i < num_total - 1; i++) {
+      array in      = add_bias(signal[i]);
+      array out     = matmul(in, weights[i]);
+      signal[i + 1] = sigmoid(out);
     }
-    // Validate with last batch
-    int st    = (num_batches - 1) * batch_size;
-    int en    = num_samples - 1;
-    array out = predict(input(seq(st, en), span));
-    err       = error(out, target(seq(st, en), span));
-    // Check if convergence criteria has been met
-    if (err < maxerr) {
-      fprintf(stderr,"Converged on Epoch: %4d\n", i + 1);
-      return err;
-    }
-    if (verbose) {
-      if ((i + 1) % 10 == 0)
-        fprintf(stderr,"Epoch: %4d, Error: %0.4f\n", i + 1, err);
+    return signal;
+  }
+  void back_propagate(const vector<array> signal, const array &target,
+                      const double &alpha) {
+    // Get error for output layer
+    array out = signal[num_total - 1];
+    array err = (out - target);
+    int m     = target.dims(0);
+    for (int i = num_total - 2; i >= 0; i--) {
+      array in    = add_bias(signal[i]);
+      array delta = (deriv(out) * err).T();
+      // Adjust weights
+      array grad = -(alpha * matmul(delta, in)) / m;
+      weights[i] += grad.T();
+      // Input to current layer is output of previous
+      out = signal[i];
+      err = matmulTT(delta, weights[i]);
+      // Remove the error of bias and propagate backward
+      err = err(span, seq(1, out.dims(1)));
     }
   }
-  return err;
-}
+public:
+  dbn(const int in_sz, const int out_sz, const std::vector<int> hidden_layers)
+    : in_size(in_sz)
+  , out_size(out_sz)
+  , num_hidden(hidden_layers.size())
+  , num_total(hidden_layers.size() + 2)
+  , weights(hidden_layers.size() + 1)
+  , hidden(hidden_layers) {}
+  void train(const array &input, const array &target, double lr_rbm = 1.0,
+             double lr_nn = 1.0, const int epochs_rbm = 15,
+             const int epochs_nn = 300, const int batch_size = 100,
+             double maxerr = 1.0, bool verbose = false) {
+    // Pre-training hidden layers
+    array X = input;
+    for (int i = 0; i < num_hidden; i++) {
+      if (verbose) { printf("Training Hidden Layer %d\n", i); }
+      int visible = (i == 0) ? in_size : hidden[i - 1];
+      rbm r(visible, hidden[i]);
+      r.train(X, lr_rbm, epochs_rbm, batch_size, verbose);
+      X          = r.prop_up(X);
+      weights[i] = r.get_weights();
+      if (verbose) { printf("\n"); }
+    }
+    weights[num_hidden] =
+      0.05 * randu(hidden[num_hidden - 1] + 1, out_size) - 0.0025;
+    const int num_samples = input.dims(0);
+    const int num_batches = num_samples / batch_size;
+    // Training the entire network
+    for (int i = 0; i < epochs_nn; i++) {
+      for (int j = 0; j < num_batches; j++) {
+        int st = j * batch_size;
+        int en = std::min(num_samples - 1, st + batch_size - 1);
+        array x = input(seq(st, en), span);
+        array y = target(seq(st, en), span);
+        // Propagate the inputs forward
+        vector<array> signals = forward_propagate(x);
+        array out             = signals[num_total - 1];
+        // Propagate the error backward
+        back_propagate(signals, y, lr_nn);
+      }
+      // Validate with last batch
+      int st     = (num_batches - 1) * batch_size;
+      int en     = num_samples - 1;
+      array out  = predict(input(seq(st, en), span));
+      double err = error(out, target(seq(st, en), span));
+      // Check if convergence criteria has been met
+      if (err < maxerr) {
+        printf("Converged on Epoch: %4d\n", i + 1);
+        return;
+      }
+      if (verbose) {
+        if ((i + 1) % 10 == 0)
+          printf("Epoch: %4d, Error: %0.4f\n", i + 1, err);
+      }
+    }
+  }
+  array predict(const array &input) {
+    vector<array> signal = forward_propagate(input);
+    array out            = signal[num_total - 1];
+    return out;
+  }
+};
 
 
-static int ann_demo_run(int perc, const dtype dt, bool verbose = false) {
+static int dbn_demo_run(int perc, const dtype dt, bool verbose = false) {
   fprintf(stderr,"** ArrayFire ANN Demo **\n");
   array train_images, test_images;
   array train_target, test_target;
@@ -236,18 +247,18 @@ static int ann_demo_run(int perc, const dtype dt, bool verbose = false) {
   }
   // Network parameters
   vector<int> layers;
-  layers.push_back(train_feats.dims(1));
   layers.push_back(100);
   layers.push_back(50);
-  layers.push_back(num_classes);
-  // Create network: architecture, range, datatype
-  ann network(layers, 0.05, dt);
+  // Create network
+  dbn network(train_feats.dims(1), num_classes, layers);
   // Train network
   timer::start();
   network.train(train_feats, train_target,
-                2.0,    // learning rate / alpha
-                250,    // max epochs
-                100,    // batch size
+                0.2,    // rbm learning rate
+                4.0,    // nn learning rate
+                15,     // rbm epochs
+                250,    // nn epochs
+                100,    // batch_size
                 0.5,    // max error
                 true);  // verbose
   af::sync();
@@ -261,6 +272,7 @@ static int ann_demo_run(int perc, const dtype dt, bool verbose = false) {
   for (int i = 0; i < 100; i++) { network.predict(test_feats); }
   af::sync();
   double test_time = timer::stop() / 100;
+  
   fprintf(stderr,"\nTraining set:\n");
   fprintf(stderr,"Accuracy on training data: %2.2f\n",
          accuracy(train_output, train_target));
@@ -280,7 +292,7 @@ static int ann_demo_run(int perc, const dtype dt, bool verbose = false) {
 
 //' @export
 // [[Rcpp::export]]
-af::array af_nn(RcppArrayFire::typed_array<f32> train_feats,
+af::array af_dbn(RcppArrayFire::typed_array<f32> train_feats,
                  RcppArrayFire::typed_array<f32> test_feats,
                  RcppArrayFire::typed_array<s32> train_target,
                  RcppArrayFire::typed_array<s32> test_target,
@@ -288,12 +300,14 @@ af::array af_nn(RcppArrayFire::typed_array<f32> train_feats,
                  RcppArrayFire::typed_array<f32> query_feats,
                  int device = 0,
                  std::string dts = "f32",
-                 float learning_rate = 2.0,    // learning rate / alpha
-                 int max_epochs = 250,    // max epochs
+                 float rbm_learning_rate = 0.2,    // rbm learning rate 
+                 float nn_learning_rate = 4.0,    // nn learning rate 
+                 int rbm_epochs = 15,    // rbm epochs
+                 int nn_epochs = 250,    // nn epochs
                  int batch_size = 100,    // batch size
                  float max_error = 0.5,    // max error
                  bool verbose = true) {
-  fprintf(stderr,"** ArrayFire ANN**\n");
+  fprintf(stderr,"** ArrayFire DBN**\n");
   if (device < 0 || device > 1) {
     std::cerr << "Bad device: " <<device << std::endl;
     return EXIT_FAILURE;
@@ -339,16 +353,21 @@ af::array af_nn(RcppArrayFire::typed_array<f32> train_feats,
   }
   // Network parameters
   vector<int> layers;
-  layers.push_back(train_feats.dims(1));
   layers.push_back(100);
   layers.push_back(50);
-  layers.push_back(num_classes);
-  // Create network: architecture, range, datatype
-  ann network(layers, 0.05, dt);
+  // Create network
+  dbn network(train_feats.dims(1), num_classes, layers);
+  
   // Train network
   timer::start();
-  network.train(train_feats, train_target, learning_rate,
-                max_epochs, batch_size, max_error, verbose);
+  network.train(train_feats, train_target,  
+                rbm_learning_rate,
+                nn_learning_rate,
+                rbm_epochs,
+                nn_epochs,
+                batch_size,
+                max_error,
+                verbose);
   af::sync();
   double train_time = timer::stop();
   // Run the trained network and test accuracy.
@@ -376,7 +395,7 @@ af::array af_nn(RcppArrayFire::typed_array<f32> train_feats,
 
 //' @export
 // [[Rcpp::export]]
-int ann_demo(int device = 0, int perc = 80, std::string dts = "f32") {
+int dbn_demo(int device = 0, int perc = 80, std::string dts = "f32") {
   if (device < 0 || device > 1) {
     std::cerr << "Bad device: " <<device << std::endl;
     return EXIT_FAILURE;
@@ -401,7 +420,7 @@ int ann_demo(int device = 0, int perc = 80, std::string dts = "f32") {
     af::setDevice(device);
     std::string info_string = af::infoString();
     std::cerr << info_string;
-    return ann_demo_run(perc, dt);
+    return dbn_demo_run(perc, dt);
   } catch (af::exception &ae) { std::cerr << ae.what() << std::endl; }
   return 0;
 }

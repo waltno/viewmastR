@@ -18,29 +18,44 @@ data<-as.matrix(iris[,1:4])
 colnames(data)<-NULL
 labels<-iris$Species
 labn<-as.numeric(labels)-1
+labf<-as.factor(labels)
 labels<-levels(labels)
 
 train_frac<-0.8
 train_idx<-sample(1:dim(data)[1], round(train_frac*dim(data)[1]))
 test_idx<-which(!1:dim(data)[1] %in% train_idx)
 
-input_list<-list(t(data[train_idx,]), t(data[test_idx,]), labn[train_idx], labn[test_idx])
-dim(input_list[[1]])
-dim(input_list[[2]])
-length(input_list[[3]])
-length(input_list[[4]])
+train_feats = t(data[train_idx,])
+test_feats = t(data[test_idx,])
+train_labels = labn[train_idx]
+test_labels = labn[test_idx]
+num_classes = length(labels)
+laboh<-matrix(model.matrix(~0+labf), ncol = length(labels))
+colnames(laboh)<-NULL
+train_targets= laboh[train_idx,]
+test_targets= laboh[test_idx,]
 
+dim(train_feats) 
+dim(test_feats)
+length(train_labels)
+length(test_labels)
+num_classes
+dim(train_targets)
+dim(test_targets)
 
-naive_bayes(input_list[[1]], input_list[[2]], input_list[[3]], input_list[[4]], length(labels), query = input_list[[2]])
+naive_bayes(train_feats, test_feats, train_labels, test_labels, num_classes, query = test_feats)
+bagging(train_feats, test_feats, train_labels, test_labels, num_classes, query = test_feats, verbose = TRUE)
+smr(train_feats, test_feats, train_targets, test_targets, num_classes, test_feats, verbose = TRUE)
+af_dbn(train_feats, test_feats, train_targets, test_targets, num_classes, query = test_feats, verbose = TRUE)
 
 
 test_backends()
-naive_bayes_demo(80)
-ann_demo(0, 80, "f32")
-
+naive_bayes_demo()
+ann_demo()
 bagging_demo()
+smr_demo()
+dbn_demo()
 
-bagging(t(input_list[[1]]), t(input_list[[2]]), input_list[[3]], input_list[[4]], length(labels), query = input_list[[2]])
 
 usethis::use_build_ignore("debug.R")
 usethis::use_build_ignore("debug.Rmd")

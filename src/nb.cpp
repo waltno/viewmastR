@@ -198,7 +198,7 @@ void naive_bayes_demo_run(int perc, bool verbose = false) {
 
 //' @export
 // [[Rcpp::export]]
-void naive_bayes_demo(int perc) {
+void naive_bayes_demo(int perc = 80) {
   // int device   = argc > 1 ? atoi(argv[1]) : 0;
   // bool console = argc > 2 ? argv[2][0] == '-' : false;
   // int perc     = argc > 3 ? atoi(argv[3]) : 60;

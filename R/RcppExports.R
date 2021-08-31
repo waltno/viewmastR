@@ -7,8 +7,18 @@ bagging_demo <- function(perc = 50L, verbose = TRUE) {
 }
 
 #' @export
-bagging <- function(train_feats, test_feats, train_labels, test_labels, num_classes, query, verbose = FALSE, num_models = 10L, sample_size = 1000L, device = 0L) {
+bagging <- function(train_feats, test_feats, train_labels, test_labels, num_classes, query, verbose = TRUE, num_models = 10L, sample_size = 1000L, device = 0L) {
     .Call('_viewmaster_bagging', PACKAGE = 'viewmaster', train_feats, test_feats, train_labels, test_labels, num_classes, query, verbose, num_models, sample_size, device)
+}
+
+#' @export
+af_dbn <- function(train_feats, test_feats, train_target, test_target, num_classes, query_feats, device = 0L, dts = "f32", rbm_learning_rate = 0.2, nn_learning_rate = 4.0, rbm_epochs = 15L, nn_epochs = 250L, batch_size = 100L, max_error = 0.5, verbose = TRUE) {
+    .Call('_viewmaster_af_dbn', PACKAGE = 'viewmaster', train_feats, test_feats, train_target, test_target, num_classes, query_feats, device, dts, rbm_learning_rate, nn_learning_rate, rbm_epochs, nn_epochs, batch_size, max_error, verbose)
+}
+
+#' @export
+dbn_demo <- function(device = 0L, perc = 80L, dts = "f32") {
+    .Call('_viewmaster_dbn_demo', PACKAGE = 'viewmaster', device, perc, dts)
 }
 
 #' @export
@@ -17,7 +27,7 @@ naive_bayes <- function(train_feats, test_feats, train_labels, test_labels, num_
 }
 
 #' @export
-naive_bayes_demo <- function(perc) {
+naive_bayes_demo <- function(perc = 80L) {
     invisible(.Call('_viewmaster_naive_bayes_demo', PACKAGE = 'viewmaster', perc))
 }
 
@@ -32,8 +42,18 @@ af_nn <- function(train_feats, test_feats, train_target, test_target, num_classe
 }
 
 #' @export
-ann_demo <- function(device, perc, dts) {
+ann_demo <- function(device = 0L, perc = 80L, dts = "f32") {
     .Call('_viewmaster_ann_demo', PACKAGE = 'viewmaster', device, perc, dts)
+}
+
+#' @export
+smr <- function(train_feats, test_feats, train_targets, test_targets, num_classes, query, verbose = FALSE, device = 0L) {
+    .Call('_viewmaster_smr', PACKAGE = 'viewmaster', train_feats, test_feats, train_targets, test_targets, num_classes, query, verbose, device)
+}
+
+#' @export
+smr_demo <- function(perc = 80L, verbose = TRUE) {
+    invisible(.Call('_viewmaster_smr_demo', PACKAGE = 'viewmaster', perc, verbose))
 }
 
 computeSparseRowVariances <- function(j, val, rm, n) {
