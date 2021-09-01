@@ -35,74 +35,32 @@ static float accuracy(const array &predicted, const array &target) {
   return 100 * count<float>(plabels == tlabels) / tlabels.elements();
 }
 
-static float abserr(const array &predicted, const array &target) {
-  return 100 * sum<float>(abs(predicted - target)) / predicted.elements();
-}
-
-static array divide(const array &a, const array &b) { return a / b; }
-// Predict based on given parameters
-
 static array predict(const array &X, const array &Weights) {
-  array Z   = matmul(X, Weights);
-  array EZ  = exp(Z);
-  array nrm = sum(EZ, 1);
-  return batchFunc(EZ, nrm, divide);
+  return sigmoid(matmul(X, Weights));
 }
 
-static void cost(array &J, array &dJ, const array &Weights, const array &X,
-          const array &Y, double lambda = 1.0) {
-  // Number of samples
-  int m = Y.dims(0);
-  // Make the lambda corresponding to Weights(0) == 0
-  array lambdat = constant(lambda, Weights.dims());
-  // No regularization for bias weights
-  lambdat(0, span) = 0;
-  // Get the prediction
-  array H = predict(X, Weights);
-  // Cost of misprediction
-  array Jerr = -sum(Y * log(H));
-  // Regularization cost
-  array Jreg = 0.5 * sum(lambdat * Weights * Weights);
-  // Total cost
-  J = (Jerr + Jreg) / m;
-  // Find the gradient of cost
-  array D = (H - Y);
-  dJ      = (matmulTN(X, D) + lambdat * Weights) / m;
-}
 
 static array train(const array &X, const array &Y, double alpha = 0.1,
-            double lambda = 1.0, double maxerr = 0.01, int maxiter = 1000,
-            bool verbose = false) {
+                         double maxerr = 0.05, int maxiter = 1000, bool verbose = false) {
   // Initialize parameters to 0
   array Weights = constant(0, X.dims(1), Y.dims(1));
-  array J, dJ;
-  float err = 0;
   for (int i = 0; i < maxiter; i++) {
-    // Get the cost and gradient
-    cost(J, dJ, Weights, X, Y, lambda);
-    err = max<float>(abs(J));
-    if (err < maxerr) {
-      if(verbose){
-        fprintf(stderr, "Iteration %4d Err: %.4f\n", i + 1, err);
-        fprintf(stderr, "Training converged\n");
-      }
-      return Weights;
+    array P   = predict(X, Weights);
+    array err = Y - P;
+    float mean_abs_err = mean<float>(abs(err));
+    if (mean_abs_err < maxerr) break;
+    if (verbose && (i + 1) % 25 == 0) {
+      fprintf(stderr, "Iter: %d, Err: %.4f\n", i + 1, mean_abs_err);
     }
-    if (verbose && ((i + 1) % 10 == 0)) {
-      fprintf(stderr, "Iteration %4d Err: %.4f\n", i + 1, err);
-    }
-    // Update the parameters via gradient descent
-    Weights = Weights - alpha * dJ;
+    Weights = Weights + alpha * matmulTN(X, err);
   }
-  if(verbose){fprintf(stderr, "Training stopped after %d iterations\n", maxiter);}
   return Weights;
 }
 
-static void benchmark_softmax_regression(const array &train_feats,
-                                  const array &train_targets,
-                                  const array &test_feats) {
+static void benchmark_perceptron(const array &train_feats, const array &train_targets,
+                                 const array test_feats) {
   timer::start();
-  array Weights = train(train_feats, train_targets, 0.1, 1.0, 0.01, 1000);
+  array Weights = train(train_feats, train_targets, 0.1, 0.01, 1000);
   af::sync();
   fprintf(stderr, "Training time: %4.4lf s\n", timer::stop());
   timer::start();
@@ -135,13 +93,8 @@ static int logit_demo_run (int perc, bool verbose = true) {
   train_feats = join(1, constant(1, num_train, 1), train_feats);
   test_feats  = join(1, constant(1, num_test, 1), test_feats);
   // Train logistic regression parameters
-  array Weights =
-    train(train_feats, train_targets,
-          0.1,    // learning rate (aka alpha)
-          1.0,    // regularization constant (aka weight decay, aka lamdba)
-          0.01,   // maximum error
-          1000,   // maximum iterations
-          true);  // verbose
+  array Weights = train(train_feats, train_targets, 0.1, 0.01, 1000, true);
+
   if(verbose){
     std::cerr << "Train feature dims:" << std::endl;
     std::cerr << train_feats.dims() << std::endl;
@@ -155,6 +108,7 @@ static int logit_demo_run (int perc, bool verbose = true) {
     std::cerr << num_classes << std::endl;
   }
   // Predict the results
+  // Predict the results
   array train_outputs = predict(train_feats, Weights);
   array test_outputs  = predict(test_feats, Weights);
   if(verbose){
@@ -162,16 +116,14 @@ static int logit_demo_run (int perc, bool verbose = true) {
             accuracy(train_outputs, train_targets));
     fprintf(stderr, "Accuracy on testing data: %2.2f\n",
             accuracy(test_outputs, test_targets));
-    fprintf(stderr, "Maximum error on testing data: %2.2f\n",
-            abserr(test_outputs, test_targets));
-    benchmark_softmax_regression(train_feats, train_targets, test_feats);
+    benchmark_perceptron(train_feats, train_targets, test_feats);
   }
   return 0;
 }
 
 //' @export
 // [[Rcpp::export]]
-af::array smr(RcppArrayFire::typed_array<f32> train_feats,
+af::array perceptron(RcppArrayFire::typed_array<f32> train_feats,
                  RcppArrayFire::typed_array<f32> test_feats,
                  RcppArrayFire::typed_array<s32> train_targets,
                  RcppArrayFire::typed_array<s32> test_targets,
@@ -209,13 +161,8 @@ af::array smr(RcppArrayFire::typed_array<f32> train_feats,
   test_feats  = join(1, constant(1, test_feats.dims(0), 1), test_feats);
   query  = join(1, constant(1, query.dims(0), 1), query);
   // Train logistic regression parameters
-  array Weights =
-    train(train_feats, train_targets,
-          0.1,    // learning rate (aka alpha)
-          1.0,    // regularization constant (aka weight decay, aka lamdba)
-          0.01,   // maximum error
-          1000,   // maximum iterations
-          verbose);  // verbose
+  array Weights = train(train_feats, train_targets, 0.1, 0.01, 1000, verbose);
+  
   // Predict the results
   array train_outputs = predict(train_feats, Weights);
   array query_outputs = predict(query, Weights);
@@ -225,9 +172,7 @@ af::array smr(RcppArrayFire::typed_array<f32> train_feats,
             accuracy(train_outputs, train_targets));
     fprintf(stderr, "Accuracy on testing data: %2.2f\n",
             accuracy(test_outputs, test_targets));
-    fprintf(stderr, "Maximum error on testing data: %2.2f\n",
-            abserr(test_outputs, test_targets));
-    benchmark_softmax_regression(train_feats, train_targets, test_feats);
+    benchmark_perceptron(train_feats, train_targets, test_feats);
   }
   return query_outputs;
 }
@@ -235,14 +180,14 @@ af::array smr(RcppArrayFire::typed_array<f32> train_feats,
 
 //' @export
 // [[Rcpp::export]]
-void smr_demo(int perc = 80, bool verbose = true) {
+void perceptron_demo(int device = 0, int perc = 80, bool verbose = true) {
   // int device   = argc > 1 ? atoi(argv[1]) : 0;
   // bool console = argc > 2 ? argv[2][0] == '-' : false;
   // int perc     = argc > 3 ? atoi(argv[3]) : 60;
-  af::setDevice(0);
+  af::setDevice(device);
   std::string info_string = af::infoString();
   std::cerr << info_string;
-  logit_demo_run(perc);
+  logit_demo_run(perc, verbose);
   // try {
   //     af::setDevice(0);
   //     af::info();

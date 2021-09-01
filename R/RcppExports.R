@@ -22,13 +22,23 @@ dbn_demo <- function(device = 0L, perc = 80L, dts = "f32") {
 }
 
 #' @export
+lr <- function(train_feats, test_feats, train_targets, test_targets, num_classes, query, verbose = FALSE, device = 0L) {
+    .Call('_viewmaster_lr', PACKAGE = 'viewmaster', train_feats, test_feats, train_targets, test_targets, num_classes, query, verbose, device)
+}
+
+#' @export
+lr_demo <- function(perc = 80L, verbose = TRUE) {
+    invisible(.Call('_viewmaster_lr_demo', PACKAGE = 'viewmaster', perc, verbose))
+}
+
+#' @export
 naive_bayes <- function(train_feats, test_feats, train_labels, test_labels, num_classes, query, verbose = FALSE, device = 0L) {
     .Call('_viewmaster_naive_bayes', PACKAGE = 'viewmaster', train_feats, test_feats, train_labels, test_labels, num_classes, query, verbose, device)
 }
 
 #' @export
-naive_bayes_demo <- function(perc = 80L) {
-    invisible(.Call('_viewmaster_naive_bayes_demo', PACKAGE = 'viewmaster', perc))
+naive_bayes_demo <- function(perc = 80L, verbose = TRUE) {
+    invisible(.Call('_viewmaster_naive_bayes_demo', PACKAGE = 'viewmaster', perc, verbose))
 }
 
 #' @export
@@ -42,8 +52,18 @@ af_nn <- function(train_feats, test_feats, train_target, test_target, num_classe
 }
 
 #' @export
-ann_demo <- function(device = 0L, perc = 80L, dts = "f32") {
-    .Call('_viewmaster_ann_demo', PACKAGE = 'viewmaster', device, perc, dts)
+ann_demo <- function(device = 0L, perc = 80L, dts = "f32", verbose = TRUE) {
+    .Call('_viewmaster_ann_demo', PACKAGE = 'viewmaster', device, perc, dts, verbose)
+}
+
+#' @export
+perceptron <- function(train_feats, test_feats, train_targets, test_targets, num_classes, query, verbose = FALSE, device = 0L) {
+    .Call('_viewmaster_perceptron', PACKAGE = 'viewmaster', train_feats, test_feats, train_targets, test_targets, num_classes, query, verbose, device)
+}
+
+#' @export
+perceptron_demo <- function(device = 0L, perc = 80L, verbose = TRUE) {
+    invisible(.Call('_viewmaster_perceptron_demo', PACKAGE = 'viewmaster', device, perc, verbose))
 }
 
 #' @export

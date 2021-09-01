@@ -11,7 +11,7 @@ viewmaster <-function(query_cds,
                       ref_cds, 
                       ref_celldata_col="celltype", 
                       query_celldata_col=NULL, 
-                      FUNC=c("naive_bayes", "neural_network", "bagging","softmax_regression", "logistic_regression", "deep_belief_nn"),
+                      FUNC=c("naive_bayes", "neural_network", "bagging","softmax_regression", "logistic_regression", "deep_belief_nn", "perceptron"),
                       selected_genes=NULL,
                       train_frac = 0.8,
                       verbose = T){
@@ -66,12 +66,15 @@ viewmaster <-function(query_cds,
         deep_belief_nn={FUNC = af_dbn
           funclabel="dbnn_"
           output = "probs"},
-        logisting_regression={FUNC = lr
+        logistic_regression={FUNC = lr
           funclabel="lr_"
           output = "probs"},
-        bagging={FUNC = lr()
+        bagging={FUNC = bagging
           funclabel="bagging_"
-          output = "probs"}
+          output = "labels"},
+        perceptron={FUNC = perceptron
+          funclabel="perceptron_"
+          output = "probs"},
         )
         
   if(is.null(query_celldata_col)){
@@ -91,7 +94,7 @@ viewmaster <-function(query_cds,
                verbose = verbose)
     out<-do.call(FUNC, args)
     colnames(out)<-labels
-    colData(query_cds)[[query_celldata_col]]<-colnames(as.data.frame(out))[apply(as.data.frame(out),1,which.max)]
+    colData(query_cds)[[coldata_label]]<-colnames(as.data.frame(out))[apply(as.data.frame(out),1,which.max)]
     return(query_cds)
   }
   if(output=="labels"){

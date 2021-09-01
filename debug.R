@@ -43,10 +43,13 @@ num_classes
 dim(train_targets)
 dim(test_targets)
 
-naive_bayes(train_feats, test_feats, train_labels, test_labels, num_classes, query = test_feats)
-bagging(train_feats, test_feats, train_labels, test_labels, num_classes, query = test_feats, verbose = TRUE)
-smr(train_feats, test_feats, train_targets, test_targets, num_classes, test_feats, verbose = TRUE)
-af_dbn(train_feats, test_feats, train_targets, test_targets, num_classes, query = test_feats, verbose = TRUE)
+af_nn(train_feats, test_feats, train_targets, test_targets, num_classes, query = test_feats, verbose = F)
+naive_bayes(train_feats, test_feats, train_labels, test_labels, num_classes, query = test_feats, verbose = F)
+bagging(train_feats, test_feats, train_labels, test_labels, num_classes, query = test_feats, verbose = F)
+smr(train_feats, test_feats, train_targets, test_targets, num_classes, query = test_feats, verbose = F)
+af_dbn(train_feats, test_feats, train_targets, test_targets, num_classes, query = test_feats, verbose = F)
+lr(train_feats, test_feats, train_targets, test_targets, num_classes, query = test_feats, verbose = F)
+perceptron(train_feats, test_feats, train_targets, test_targets, num_classes, query = test_feats, verbose = F)
 
 
 test_backends()
@@ -55,6 +58,8 @@ ann_demo()
 bagging_demo()
 smr_demo()
 dbn_demo()
+lr_demo()
+perceptron_demo()
 
 
 usethis::use_build_ignore("debug.R")

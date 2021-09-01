@@ -75,6 +75,35 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// lr
+af::array lr(RcppArrayFire::typed_array<f32> train_feats, RcppArrayFire::typed_array<f32> test_feats, RcppArrayFire::typed_array<s32> train_targets, RcppArrayFire::typed_array<s32> test_targets, int num_classes, RcppArrayFire::typed_array<f32> query, bool verbose, int device);
+RcppExport SEXP _viewmaster_lr(SEXP train_featsSEXP, SEXP test_featsSEXP, SEXP train_targetsSEXP, SEXP test_targetsSEXP, SEXP num_classesSEXP, SEXP querySEXP, SEXP verboseSEXP, SEXP deviceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32> >::type train_feats(train_featsSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32> >::type test_feats(test_featsSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<s32> >::type train_targets(train_targetsSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<s32> >::type test_targets(test_targetsSEXP);
+    Rcpp::traits::input_parameter< int >::type num_classes(num_classesSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32> >::type query(querySEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< int >::type device(deviceSEXP);
+    rcpp_result_gen = Rcpp::wrap(lr(train_feats, test_feats, train_targets, test_targets, num_classes, query, verbose, device));
+    return rcpp_result_gen;
+END_RCPP
+}
+// lr_demo
+void lr_demo(int perc, bool verbose);
+RcppExport SEXP _viewmaster_lr_demo(SEXP percSEXP, SEXP verboseSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type perc(percSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    lr_demo(perc, verbose);
+    return R_NilValue;
+END_RCPP
+}
 // naive_bayes
 af::array naive_bayes(RcppArrayFire::typed_array<f32> train_feats, RcppArrayFire::typed_array<f32> test_feats, RcppArrayFire::typed_array<s32> train_labels, RcppArrayFire::typed_array<s32> test_labels, int num_classes, RcppArrayFire::typed_array<f32> query, bool verbose, int device);
 RcppExport SEXP _viewmaster_naive_bayes(SEXP train_featsSEXP, SEXP test_featsSEXP, SEXP train_labelsSEXP, SEXP test_labelsSEXP, SEXP num_classesSEXP, SEXP querySEXP, SEXP verboseSEXP, SEXP deviceSEXP) {
@@ -94,12 +123,13 @@ BEGIN_RCPP
 END_RCPP
 }
 // naive_bayes_demo
-void naive_bayes_demo(int perc);
-RcppExport SEXP _viewmaster_naive_bayes_demo(SEXP percSEXP) {
+void naive_bayes_demo(int perc, bool verbose);
+RcppExport SEXP _viewmaster_naive_bayes_demo(SEXP percSEXP, SEXP verboseSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< int >::type perc(percSEXP);
-    naive_bayes_demo(perc);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    naive_bayes_demo(perc, verbose);
     return R_NilValue;
 END_RCPP
 }
@@ -137,16 +167,47 @@ BEGIN_RCPP
 END_RCPP
 }
 // ann_demo
-int ann_demo(int device, int perc, std::string dts);
-RcppExport SEXP _viewmaster_ann_demo(SEXP deviceSEXP, SEXP percSEXP, SEXP dtsSEXP) {
+int ann_demo(int device, int perc, std::string dts, bool verbose);
+RcppExport SEXP _viewmaster_ann_demo(SEXP deviceSEXP, SEXP percSEXP, SEXP dtsSEXP, SEXP verboseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< int >::type device(deviceSEXP);
     Rcpp::traits::input_parameter< int >::type perc(percSEXP);
     Rcpp::traits::input_parameter< std::string >::type dts(dtsSEXP);
-    rcpp_result_gen = Rcpp::wrap(ann_demo(device, perc, dts));
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    rcpp_result_gen = Rcpp::wrap(ann_demo(device, perc, dts, verbose));
     return rcpp_result_gen;
+END_RCPP
+}
+// perceptron
+af::array perceptron(RcppArrayFire::typed_array<f32> train_feats, RcppArrayFire::typed_array<f32> test_feats, RcppArrayFire::typed_array<s32> train_targets, RcppArrayFire::typed_array<s32> test_targets, int num_classes, RcppArrayFire::typed_array<f32> query, bool verbose, int device);
+RcppExport SEXP _viewmaster_perceptron(SEXP train_featsSEXP, SEXP test_featsSEXP, SEXP train_targetsSEXP, SEXP test_targetsSEXP, SEXP num_classesSEXP, SEXP querySEXP, SEXP verboseSEXP, SEXP deviceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32> >::type train_feats(train_featsSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32> >::type test_feats(test_featsSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<s32> >::type train_targets(train_targetsSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<s32> >::type test_targets(test_targetsSEXP);
+    Rcpp::traits::input_parameter< int >::type num_classes(num_classesSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32> >::type query(querySEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< int >::type device(deviceSEXP);
+    rcpp_result_gen = Rcpp::wrap(perceptron(train_feats, test_feats, train_targets, test_targets, num_classes, query, verbose, device));
+    return rcpp_result_gen;
+END_RCPP
+}
+// perceptron_demo
+void perceptron_demo(int device, int perc, bool verbose);
+RcppExport SEXP _viewmaster_perceptron_demo(SEXP deviceSEXP, SEXP percSEXP, SEXP verboseSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type device(deviceSEXP);
+    Rcpp::traits::input_parameter< int >::type perc(percSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    perceptron_demo(device, perc, verbose);
+    return R_NilValue;
 END_RCPP
 }
 // smr
@@ -198,11 +259,15 @@ static const R_CallMethodDef CallEntries[] = {
     {"_viewmaster_bagging", (DL_FUNC) &_viewmaster_bagging, 10},
     {"_viewmaster_af_dbn", (DL_FUNC) &_viewmaster_af_dbn, 15},
     {"_viewmaster_dbn_demo", (DL_FUNC) &_viewmaster_dbn_demo, 3},
+    {"_viewmaster_lr", (DL_FUNC) &_viewmaster_lr, 8},
+    {"_viewmaster_lr_demo", (DL_FUNC) &_viewmaster_lr_demo, 2},
     {"_viewmaster_naive_bayes", (DL_FUNC) &_viewmaster_naive_bayes, 8},
-    {"_viewmaster_naive_bayes_demo", (DL_FUNC) &_viewmaster_naive_bayes_demo, 1},
+    {"_viewmaster_naive_bayes_demo", (DL_FUNC) &_viewmaster_naive_bayes_demo, 2},
     {"_viewmaster_test_backends", (DL_FUNC) &_viewmaster_test_backends, 0},
     {"_viewmaster_af_nn", (DL_FUNC) &_viewmaster_af_nn, 13},
-    {"_viewmaster_ann_demo", (DL_FUNC) &_viewmaster_ann_demo, 3},
+    {"_viewmaster_ann_demo", (DL_FUNC) &_viewmaster_ann_demo, 4},
+    {"_viewmaster_perceptron", (DL_FUNC) &_viewmaster_perceptron, 8},
+    {"_viewmaster_perceptron_demo", (DL_FUNC) &_viewmaster_perceptron_demo, 3},
     {"_viewmaster_smr", (DL_FUNC) &_viewmaster_smr, 8},
     {"_viewmaster_smr_demo", (DL_FUNC) &_viewmaster_smr_demo, 2},
     {"_viewmaster_computeSparseRowVariances", (DL_FUNC) &_viewmaster_computeSparseRowVariances, 4},

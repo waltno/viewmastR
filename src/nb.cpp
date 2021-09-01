@@ -113,11 +113,12 @@ af::array naive_bayes(RcppArrayFire::typed_array<f32> train_feats,
   try {
     af::setDevice(device);
     std::string info_string = af::infoString();
-    std::cerr << info_string;
+    if(verbose) {std::cerr << info_string;}
   } catch (af::exception &ae) { std::cerr << ae.what() << std::endl; }
 //   // Get training parameters
   array mu, sig2;
   float *priors = new float[num_classes];
+
   if(verbose){
     std::cerr << "Train feature dims:" << std::endl;
     std::cerr << train_feats.dims() << std::endl;
@@ -133,19 +134,12 @@ af::array naive_bayes(RcppArrayFire::typed_array<f32> train_feats,
   naive_bayes_train(priors, mu, sig2, train_feats, train_labels, num_classes);
   // Predict the classes
   array res_labels = naive_bayes_predict(priors, mu, sig2, test_feats, num_classes);
-  // delete[] priors;
-// //   // Results
-  fprintf(stderr,"Training samples: %4d, Testing samples: %4d\n", train_labels.dims(0), test_labels.dims(0));
-  fprintf(stderr,"Accuracy on testing  data: %2.2f\n", nb_accuracy(res_labels, test_labels));
-  benchmark_nb(train_feats, test_feats, train_labels, num_classes);
-//   if (!console) {
-//     test_images = test_images.T();
-//     test_labels = test_labels.T();
-//     // FIXME: Crashing in mnist_common.h::classify
-//     // display_results<false>(test_images, res_labels, test_labels , 20);
-//   }
-// return query
-  af::array query_labels = naive_bayes_predict(priors, mu, sig2, query, num_classes);
+  array query_labels = naive_bayes_predict(priors, mu, sig2, query, num_classes);
+  if(verbose) {
+    fprintf(stderr,"Training samples: %4d, Testing samples: %4d\n", train_labels.dims(0), test_labels.dims(0));
+    fprintf(stderr,"Accuracy on testing  data: %2.2f\n", nb_accuracy(res_labels, test_labels));
+    benchmark_nb(train_feats, test_feats, train_labels, num_classes);
+  }
   return query_labels;
 }
 
@@ -198,14 +192,14 @@ void naive_bayes_demo_run(int perc, bool verbose = false) {
 
 //' @export
 // [[Rcpp::export]]
-void naive_bayes_demo(int perc = 80) {
+void naive_bayes_demo(int perc = 80, bool verbose = true) {
   // int device   = argc > 1 ? atoi(argv[1]) : 0;
   // bool console = argc > 2 ? argv[2][0] == '-' : false;
   // int perc     = argc > 3 ? atoi(argv[3]) : 60;
   af::setDevice(0);
   std::string info_string = af::infoString();
   std::cerr << info_string;
-  naive_bayes_demo_run(perc);
+  naive_bayes_demo_run(perc, verbose);
   // try {
   //     af::setDevice(0);
   //     af::info();

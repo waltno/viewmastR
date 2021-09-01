@@ -96,10 +96,8 @@ public:
         h_bias += delta_hb;
         if (verbose) { err += error(v_pos, v_neg); }
       }
-      if (verbose) {
-        printf("Epoch %d: Reconstruction error: %0.4f\n", i + 1,
-               err / num_batches);
-      }
+      if (verbose) {fprintf(stderr, "Epoch %d: Reconstruction error: %0.4f\n", i + 1,
+               err / num_batches);};
     }
   }
   array prop_up(const array &in) {
@@ -164,13 +162,13 @@ public:
     // Pre-training hidden layers
     array X = input;
     for (int i = 0; i < num_hidden; i++) {
-      if (verbose) { printf("Training Hidden Layer %d\n", i); }
+      if (verbose) { fprintf(stderr, "Training Hidden Layer %d\n", i); }
       int visible = (i == 0) ? in_size : hidden[i - 1];
       rbm r(visible, hidden[i]);
       r.train(X, lr_rbm, epochs_rbm, batch_size, verbose);
       X          = r.prop_up(X);
       weights[i] = r.get_weights();
-      if (verbose) { printf("\n"); }
+      if (verbose) { fprintf(stderr, "\n"); }
     }
     weights[num_hidden] =
       0.05 * randu(hidden[num_hidden - 1] + 1, out_size) - 0.0025;
@@ -196,12 +194,12 @@ public:
       double err = error(out, target(seq(st, en), span));
       // Check if convergence criteria has been met
       if (err < maxerr) {
-        printf("Converged on Epoch: %4d\n", i + 1);
+        if (verbose) { fprintf(stderr,"Converged on Epoch: %4d\n", i + 1); };
         return;
       }
       if (verbose) {
         if ((i + 1) % 10 == 0)
-          printf("Epoch: %4d, Error: %0.4f\n", i + 1, err);
+          fprintf(stderr, "Epoch: %4d, Error: %0.4f\n", i + 1, err);
       }
     }
   }
@@ -214,7 +212,7 @@ public:
 
 
 static int dbn_demo_run(int perc, const dtype dt, bool verbose = false) {
-  fprintf(stderr,"** ArrayFire ANN Demo **\n");
+  if (verbose) { fprintf(stderr,"** ArrayFire DBN Demo **\n"); };
   array train_images, test_images;
   array train_target, test_target;
   int num_classes, num_train, num_test;
@@ -260,27 +258,29 @@ static int dbn_demo_run(int perc, const dtype dt, bool verbose = false) {
                 250,    // nn epochs
                 100,    // batch_size
                 0.5,    // max error
-                true);  // verbose
+                verbose);  // verbose
   af::sync();
   double train_time = timer::stop();
   // Run the trained network and test accuracy.
   array train_output = network.predict(train_feats);
   array test_output  = network.predict(test_feats);
   // Benchmark prediction
-  af::sync();
-  timer::start();
-  for (int i = 0; i < 100; i++) { network.predict(test_feats); }
-  af::sync();
+
   double test_time = timer::stop() / 100;
-  
-  fprintf(stderr,"\nTraining set:\n");
-  fprintf(stderr,"Accuracy on training data: %2.2f\n",
-         accuracy(train_output, train_target));
-  fprintf(stderr,"\nTest set:\n");
-  fprintf(stderr,"Accuracy on testing  data: %2.2f\n",
-         accuracy(test_output, test_target));
-  fprintf(stderr,"\nTraining time: %4.4lf s\n", train_time);
-  fprintf(stderr,"Prediction time: %4.4lf s\n\n", test_time);
+  if (verbose){
+    af::sync();
+    timer::start();
+    for (int i = 0; i < 100; i++) { network.predict(test_feats); }
+    af::sync();
+    fprintf(stderr,"\nTraining set:\n");
+    fprintf(stderr,"Accuracy on training data: %2.2f\n",
+           accuracy(train_output, train_target));
+    fprintf(stderr,"\nTest set:\n");
+    fprintf(stderr,"Accuracy on testing  data: %2.2f\n",
+           accuracy(test_output, test_target));
+    fprintf(stderr,"\nTraining time: %4.4lf s\n", train_time);
+    fprintf(stderr,"Prediction time: %4.4lf s\n\n", test_time);
+  }
   // if (!console) {
   //   // Get 20 random test images.
   //   test_output = test_output.T();
@@ -307,7 +307,7 @@ af::array af_dbn(RcppArrayFire::typed_array<f32> train_feats,
                  int batch_size = 100,    // batch size
                  float max_error = 0.5,    // max error
                  bool verbose = true) {
-  fprintf(stderr,"** ArrayFire DBN**\n");
+  if (verbose) { fprintf(stderr,"** ArrayFire DBN**\n"); };
   if (device < 0 || device > 1) {
     std::cerr << "Bad device: " <<device << std::endl;
     return EXIT_FAILURE;
@@ -329,13 +329,13 @@ af::array af_dbn(RcppArrayFire::typed_array<f32> train_feats,
   try {
     af::setDevice(device);
     std::string info_string = af::infoString();
-    std::cerr << info_string;
+    if(verbose) {std::cerr << info_string;}
   } catch (af::exception &ae) { std::cerr << ae.what() << std::endl; }
   // Reshape images into feature vectors
   train_feats = train_feats.T();
   test_feats  = test_feats.T();
-  train_target = train_target.T();
-  test_target  = test_target.T();
+  // train_target = train_target.T();
+  // test_target  = test_target.T();
   query_feats  = query_feats.T();
   if(verbose){
     std::cerr << "Train feature dims:" << std::endl;
@@ -380,14 +380,16 @@ af::array af_dbn(RcppArrayFire::typed_array<f32> train_feats,
   for (int i = 0; i < 100; i++) { network.predict(test_feats); }
   af::sync();
   double test_time = timer::stop() / 100;
-  fprintf(stderr,"\nTraining set:\n");
-  fprintf(stderr,"Accuracy on training data: %2.2f\n",
-         accuracy(train_output, train_target));
-  fprintf(stderr,"\nTest set:\n");
-  fprintf(stderr,"Accuracy on testing  data: %2.2f\n",
-         accuracy(test_output, test_target));
-  fprintf(stderr,"\nTraining time: %4.4lf s\n", train_time);
-  fprintf(stderr,"Prediction time: %4.4lf s\n\n", test_time);
+  if (verbose) {
+    fprintf(stderr,"\nTraining set:\n");
+    fprintf(stderr,"Accuracy on training data: %2.2f\n",
+           accuracy(train_output, train_target));
+    fprintf(stderr,"\nTest set:\n");
+    fprintf(stderr,"Accuracy on testing  data: %2.2f\n",
+           accuracy(test_output, test_target));
+    fprintf(stderr,"\nTraining time: %4.4lf s\n", train_time);
+    fprintf(stderr,"Prediction time: %4.4lf s\n\n", test_time);
+  }
   array query_output  = network.predict(query_feats);
   return query_output;
 }

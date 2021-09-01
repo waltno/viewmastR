@@ -118,9 +118,11 @@ void bagging_demo(int perc = 50, bool verbose = true) {
                              num_classes, num_models, sample_size);
   double test_time = timer::stop();
   // Results
-  printf("Accuracy on testing  data: %2.2f\n",
-         accuracy(res_labels, test_labels));
-  printf("Prediction time: %4.4f\n", test_time);
+  if(verbose) {
+    printf("Accuracy on testing  data: %2.2f\n",
+           accuracy(res_labels, test_labels));
+    printf("Prediction time: %4.4f\n", test_time);
+  }
   // if (false && !console) {
   //   display_results<false>(test_images, res_labels, test_labels.T(), 20);
   // }
@@ -141,7 +143,7 @@ af::array bagging(RcppArrayFire::typed_array<f32> train_feats,
   try {
     af::setDevice(device);
     std::string info_string = af::infoString();
-    std::cerr << info_string;
+    if(verbose) {std::cerr << info_string;}
   } catch (af::exception &ae) { std::cerr << ae.what() << std::endl; }
   
   train_feats = train_feats.T();
@@ -166,9 +168,11 @@ af::array bagging(RcppArrayFire::typed_array<f32> train_feats,
                              num_classes, num_models, sample_size);
   double test_time = timer::stop();
   // Results
-  fprintf(stderr, "Accuracy on testing  data: %2.2f\n",
-         accuracy(res_labels, test_labels));
-  fprintf(stderr, "Prediction time: %4.4f\n", test_time);
+  if(verbose) {
+    fprintf(stderr, "Accuracy on testing  data: %2.2f\n",
+           accuracy(res_labels, test_labels));
+    fprintf(stderr, "Prediction time: %4.4f\n", test_time);
+  }
   af::array query_labels = bagging(train_feats, query, train_labels,
                                    num_classes, num_models, sample_size);
   return query_labels;

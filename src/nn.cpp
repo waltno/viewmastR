@@ -102,7 +102,7 @@ private:
                       const double &alpha);
 public:
   // Create a network with given parameters
-  ann(vector<int> layers, double range, dtype dt = f32);
+  ann(vector<int> layers, double range, dtype dt = f32, bool verbose = false);
   // Output after single pass of forward propagation
   array predict(const array &input);
   // Method to train the neural net
@@ -147,12 +147,14 @@ void ann::back_propagate(const vector<array> signal, const array &target,
   }
 }
 
-ann::ann(vector<int> layers, double range, dtype dt)
+ann::ann(vector<int> layers, double range, dtype dt, bool verbose)
   : num_layers(layers.size()), weights(layers.size() - 1), datatype(dt) {
-  std::cerr
-  << "Initializing weights using a random uniformly distribution between "
-  << -range / 2 << " and " << range / 2 << " at precision "
-  << toStr(datatype) << std::endl;
+  if(verbose){
+    std::cerr
+    << "Initializing weights using a random uniformly distribution between "
+    << -range / 2 << " and " << range / 2 << " at precision "
+    << toStr(datatype) << std::endl;
+  }
   for (int i = 0; i < num_layers - 1; i++) {
     weights[i] = range * randu(layers[i] + 1, layers[i + 1]) - range / 2;
     if (datatype != f32) weights[i] = weights[i].as(datatype);
@@ -190,7 +192,7 @@ double ann::train(const array &input, const array &target, double alpha,
     err       = error(out, target(seq(st, en), span));
     // Check if convergence criteria has been met
     if (err < maxerr) {
-      fprintf(stderr,"Converged on Epoch: %4d\n", i + 1);
+      if(verbose){fprintf(stderr,"Converged on Epoch: %4d\n", i + 1);}
       return err;
     }
     if (verbose) {
@@ -241,7 +243,7 @@ static int ann_demo_run(int perc, const dtype dt, bool verbose = false) {
   layers.push_back(50);
   layers.push_back(num_classes);
   // Create network: architecture, range, datatype
-  ann network(layers, 0.05, dt);
+  ann network(layers, 0.05, dt, verbose);
   // Train network
   timer::start();
   network.train(train_feats, train_target,
@@ -293,7 +295,7 @@ af::array af_nn(RcppArrayFire::typed_array<f32> train_feats,
                  int batch_size = 100,    // batch size
                  float max_error = 0.5,    // max error
                  bool verbose = true) {
-  fprintf(stderr,"** ArrayFire ANN**\n");
+  if(verbose) {fprintf(stderr,"** ArrayFire ANN**\n");}
   if (device < 0 || device > 1) {
     std::cerr << "Bad device: " <<device << std::endl;
     return EXIT_FAILURE;
@@ -315,13 +317,13 @@ af::array af_nn(RcppArrayFire::typed_array<f32> train_feats,
   try {
     af::setDevice(device);
     std::string info_string = af::infoString();
-    std::cerr << info_string;
+    if(verbose) {std::cerr << info_string;}
   } catch (af::exception &ae) { std::cerr << ae.what() << std::endl; }
   // Reshape images into feature vectors
   train_feats = train_feats.T();
   test_feats  = test_feats.T();
-  train_target = train_target.T();
-  test_target  = test_target.T();
+  // train_target = train_target.T();
+  // test_target  = test_target.T();
   query_feats  = query_feats.T();
   if(verbose){
     std::cerr << "Train feature dims:" << std::endl;
@@ -344,7 +346,7 @@ af::array af_nn(RcppArrayFire::typed_array<f32> train_feats,
   layers.push_back(50);
   layers.push_back(num_classes);
   // Create network: architecture, range, datatype
-  ann network(layers, 0.05, dt);
+  ann network(layers, 0.05, dt, verbose);
   // Train network
   timer::start();
   network.train(train_feats, train_target, learning_rate,
@@ -357,26 +359,28 @@ af::array af_nn(RcppArrayFire::typed_array<f32> train_feats,
   // array query_output  = network.predict(query_feats);
   // Benchmark prediction
   af::sync();
-  timer::start();
-  for (int i = 0; i < 100; i++) { network.predict(test_feats); }
-  af::sync();
-  double test_time = timer::stop() / 100;
-  fprintf(stderr,"\nTraining set:\n");
-  fprintf(stderr,"Accuracy on training data: %2.2f\n",
-         accuracy(train_output, train_target));
-  fprintf(stderr,"\nTest set:\n");
-  fprintf(stderr,"Accuracy on testing  data: %2.2f\n",
-         accuracy(test_output, test_target));
-  fprintf(stderr,"\nTraining time: %4.4lf s\n", train_time);
-  fprintf(stderr,"Prediction time: %4.4lf s\n\n", test_time);
   array query_output  = network.predict(query_feats);
+  if(verbose) {
+    timer::start();
+    for (int i = 0; i < 100; i++) { network.predict(test_feats); }
+    af::sync();
+    double test_time = timer::stop() / 100;
+    fprintf(stderr,"\nTraining set:\n");
+    fprintf(stderr,"Accuracy on training data: %2.2f\n",
+           accuracy(train_output, train_target));
+    fprintf(stderr,"\nTest set:\n");
+    fprintf(stderr,"Accuracy on testing  data: %2.2f\n",
+           accuracy(test_output, test_target));
+    fprintf(stderr,"\nTraining time: %4.4lf s\n", train_time);
+    fprintf(stderr,"Prediction time: %4.4lf s\n\n", test_time);
+  }
   return query_output;
 }
 
 
 //' @export
 // [[Rcpp::export]]
-int ann_demo(int device = 0, int perc = 80, std::string dts = "f32") {
+int ann_demo(int device = 0, int perc = 80, std::string dts = "f32", bool verbose = true) {
   if (device < 0 || device > 1) {
     std::cerr << "Bad device: " <<device << std::endl;
     return EXIT_FAILURE;
@@ -401,7 +405,7 @@ int ann_demo(int device = 0, int perc = 80, std::string dts = "f32") {
     af::setDevice(device);
     std::string info_string = af::infoString();
     std::cerr << info_string;
-    return ann_demo_run(perc, dt);
+    return ann_demo_run(perc, dt, verbose = verbose);
   } catch (af::exception &ae) { std::cerr << ae.what() << std::endl; }
   return 0;
 }

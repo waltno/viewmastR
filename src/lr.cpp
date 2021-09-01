@@ -39,18 +39,14 @@ static float abserr(const array &predicted, const array &target) {
   return 100 * sum<float>(abs(predicted - target)) / predicted.elements();
 }
 
-static array divide(const array &a, const array &b) { return a / b; }
-// Predict based on given parameters
 
 static array predict(const array &X, const array &Weights) {
-  array Z   = matmul(X, Weights);
-  array EZ  = exp(Z);
-  array nrm = sum(EZ, 1);
-  return batchFunc(EZ, nrm, divide);
+  array Z = matmul(X, Weights);
+  return sigmoid(Z);
 }
 
 static void cost(array &J, array &dJ, const array &Weights, const array &X,
-          const array &Y, double lambda = 1.0) {
+                 const array &Y, double lambda = 1.0) {
   // Number of samples
   int m = Y.dims(0);
   // Make the lambda corresponding to Weights(0) == 0
@@ -60,7 +56,7 @@ static void cost(array &J, array &dJ, const array &Weights, const array &X,
   // Get the prediction
   array H = predict(X, Weights);
   // Cost of misprediction
-  array Jerr = -sum(Y * log(H));
+  array Jerr = -sum(Y * log(H) + (1 - Y) * log(1 - H));
   // Regularization cost
   array Jreg = 0.5 * sum(lambdat * Weights * Weights);
   // Total cost
@@ -98,9 +94,9 @@ static array train(const array &X, const array &Y, double alpha = 0.1,
   return Weights;
 }
 
-static void benchmark_softmax_regression(const array &train_feats,
-                                  const array &train_targets,
-                                  const array &test_feats) {
+static void benchmark_logistic_regression(const array &train_feats,
+                                          const array &train_targets,
+                                          const array test_feats) {
   timer::start();
   array Weights = train(train_feats, train_targets, 0.1, 1.0, 0.01, 1000);
   af::sync();
@@ -159,19 +155,19 @@ static int logit_demo_run (int perc, bool verbose = true) {
   array test_outputs  = predict(test_feats, Weights);
   if(verbose){
     fprintf(stderr, "Accuracy on training data: %2.2f\n",
-            accuracy(train_outputs, train_targets));
+           accuracy(train_outputs, train_targets));
     fprintf(stderr, "Accuracy on testing data: %2.2f\n",
-            accuracy(test_outputs, test_targets));
+           accuracy(test_outputs, test_targets));
     fprintf(stderr, "Maximum error on testing data: %2.2f\n",
-            abserr(test_outputs, test_targets));
-    benchmark_softmax_regression(train_feats, train_targets, test_feats);
+           abserr(test_outputs, test_targets));
+    benchmark_logistic_regression(train_feats, train_targets, test_feats);
   }
   return 0;
 }
 
 //' @export
 // [[Rcpp::export]]
-af::array smr(RcppArrayFire::typed_array<f32> train_feats,
+af::array lr(RcppArrayFire::typed_array<f32> train_feats,
                  RcppArrayFire::typed_array<f32> test_feats,
                  RcppArrayFire::typed_array<s32> train_targets,
                  RcppArrayFire::typed_array<s32> test_targets,
@@ -222,12 +218,12 @@ af::array smr(RcppArrayFire::typed_array<f32> train_feats,
   array test_outputs  = predict(test_feats, Weights);
   if(verbose){
     fprintf(stderr, "Accuracy on training data: %2.2f\n",
-            accuracy(train_outputs, train_targets));
+         accuracy(train_outputs, train_targets));
     fprintf(stderr, "Accuracy on testing data: %2.2f\n",
-            accuracy(test_outputs, test_targets));
+         accuracy(test_outputs, test_targets));
     fprintf(stderr, "Maximum error on testing data: %2.2f\n",
-            abserr(test_outputs, test_targets));
-    benchmark_softmax_regression(train_feats, train_targets, test_feats);
+         abserr(test_outputs, test_targets));
+    benchmark_logistic_regression(train_feats, train_targets, test_feats);
   }
   return query_outputs;
 }
@@ -235,7 +231,7 @@ af::array smr(RcppArrayFire::typed_array<f32> train_feats,
 
 //' @export
 // [[Rcpp::export]]
-void smr_demo(int perc = 80, bool verbose = true) {
+void lr_demo(int perc = 80, bool verbose = true) {
   // int device   = argc > 1 ? atoi(argv[1]) : 0;
   // bool console = argc > 2 ? argv[2][0] == '-' : false;
   // int perc     = argc > 3 ? atoi(argv[3]) : 60;
