@@ -1,6 +1,6 @@
 # viewmaster
 
-<img src="https://github.com/wheaton5/souporcell/blob/viewmaster.png" width="100">
+<img src="https://github.com/sfurlan/viewmaster/blob/viewmaster.png" width="100">
 
 
 viewmaster is a method for performing unsupervised classification of single cells across datasets written for use in the R environment.
