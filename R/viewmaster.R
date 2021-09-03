@@ -12,7 +12,7 @@ viewmaster <-function(query_cds,
                       ref_celldata_col="celltype", 
                       query_celldata_col=NULL, 
                       FUNC=c("naive_bayes", "neural_network", "bagging","softmax_regression", "logistic_regression", "deep_belief_nn", "perceptron"),
-                      selected_genes=NULL,
+                        selected_genes=NULL,
                       train_frac = 0.8,
                       verbose = T){
   FUNC=match.arg(FUNC)
