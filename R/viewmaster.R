@@ -110,3 +110,65 @@ viewmaster <-function(query_cds,
     return(query_cds)
   }
 }
+
+
+
+
+#' Pseudo-singlets
+#' @description ip
+#' @param se Summarized Experiment
+#' @param cds reference cds
+#' @return a cell_data_set object or a list of items if unfiltered data is returned (see unfiltered)
+#' @importFrom monocle3 new_cell_data_set
+#' @importFrom Matrix rowSums
+#' @export
+
+pseudo_singlets <- function(se, 
+                            sc_cds, 
+                            assay_name="logcounts", 
+                            logtransformed=T, 
+                            selected_genes=NULL,
+                            ncells_per_col=50, 
+                            threads = detectCores()){
+  if(!assay_name %in% names(assays(se))){stop("Assay name not found in Summarized Experiment object;  Run: 'names(assays(se))' to see available assays")}
+  mat<-as.matrix(assays(se)[[assay_name]])
+  if(logtransformed){
+    cmat<-ceiling(exp(mat)-1)
+  }else{
+    cmat<-mat
+  }
+  if(is.null(selected_genes)){
+    selected_genes<-rownames(se)
+  }
+  exprs_bulk<-cmat[selected_genes,]
+  exprs_sc<-counts(sc_cds)[selected_genes[selected_genes %in% rownames(sc_cds)],]
+  depth <- round(sum(rowSums(exprs_sc) / ncol(exprs_sc)))
+  nRep <- 5
+  n2 <- ceiling(ncells_per_col / nRep)
+  ratios <- c(2, 1.5, 1, 0.5, 0.25) #range of ratios of number of fragments
+  message(paste0("Simulating ", (ncells_per_col * dim(se)[2]), " single cells"))
+  syn_mat <- pbmcapply::pbmclapply(seq_len(ncol(exprs_bulk)), function(x){
+    counts <- exprs_bulk[, x]
+    counts <- rep(seq_along(as.numeric(counts)), as.numeric(counts))
+    simMat <- lapply(seq_len(nRep), function(y){
+      ratio <- ratios[y]
+      simMat <- matrix(sample(x = counts, size = ceiling(ratio * depth) * n2, replace = TRUE), ncol = n2)
+      simMat <- Matrix::summary(as(simMat, "dgCMatrix"))[,-1,drop=FALSE]
+      simMat[,1] <- simMat[,1] + (y - 1) * n2
+      simMat
+    }) %>%  Reduce("rbind", .)
+    simMat <- Matrix::sparseMatrix(i = simMat[,2], j = simMat[,1], x = rep(1, nrow(simMat)), dims = c(nrow(exprs_bulk), n2 * nRep))
+    colnames(simMat) <- paste0(colnames(exprs_bulk)[x], "#", seq_len(ncol(simMat)))
+    rownames(simMat)<-rownames(exprs_bulk)
+    simMat}, mc.cores =  threads)
+  syn_mat <- Reduce("cbind", syn_mat)
+  if(any(is.nan(syn_mat@x))){
+    syn_mat@x[is.nan(syn_mat@x)]<-0
+    warning("NaN calculated during single cell generation")
+  }
+  slice<-rep.int(1:nrow(colData(se)), ncells_per_col)
+  slice<-slice[order(slice)]
+  sim_meta_data<-colData(se)[slice,]
+  rownames(sim_meta_data)<-colnames(syn_mat)
+  new_cell_data_set(syn_mat, sim_meta_data, DataFrame(row.names = rownames(syn_mat), gene_short_name = rownames(syn_mat), id = rownames(syn_mat)))
+}
