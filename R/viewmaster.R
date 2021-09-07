@@ -23,6 +23,8 @@ viewmaster <-function(query_cds,
   
   if(is.null(selected_genes)){
     selected_common<-rownames(qcds)
+  }else{
+    selected_common<-selected_genes
   }
   
   # #no tf_idf
@@ -110,6 +112,36 @@ viewmaster <-function(query_cds,
     return(query_cds)
   }
 }
+
+#' Common Variant Genes
+#' @description Find common variant genes between two cds objects
+#' @param cds1 cds 
+#' @param cds2 
+#' @return a vector of similarly variant genes
+#' @export
+
+
+common_variant_genes <-function(cds1, 
+                      cds2,
+                      top_n=2000,
+                      logmean_ul = 2, 
+                      logmean_ll = -6,
+                      row_data_column = "gene_short_name",
+                      unique_data_column = "id",
+                      verbose = T){
+  cds1<-calculate_gene_dispersion(cds1)
+
+  cds1<-select_genes(cds1, top_n = top_n, logmean_ul = logmean_ul, logmean_ll = logmean_ll)
+  plot_gene_dispersion(cds1)
+  qsel<-rowData(cds1)[[row_data_column]][rowData(cds1)[[unique_data_column]] %in% get_selected_genes(cds1)]
+  cds2<-calculate_gene_dispersion(cds2)
+  plot_gene_dispersion(cds2)
+  cds2<-select_genes(cds2, top_n = top_n, logmean_ul = logmean_ul, logmean_ll = logmean_ll)
+  plot_gene_dispersion(cds2)
+  rsel<-rowData(cds2)[[row_data_column]][rowData(cds2)[[unique_data_column]] %in% get_selected_genes(cds2)]
+  selected_common<-intersect(qsel, rsel)
+  selected_common
+  }
 
 
 
