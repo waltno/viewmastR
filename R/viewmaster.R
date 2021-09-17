@@ -132,12 +132,15 @@ common_variant_genes <-function(cds1,
   cds1<-calculate_gene_dispersion(cds1)
 
   cds1<-select_genes(cds1, top_n = top_n, logmean_ul = logmean_ul, logmean_ll = logmean_ll)
-  plot_gene_dispersion(cds1)
+  p<-plot_gene_dispersion(cds1)
+  print(p)
   qsel<-rowData(cds1)[[row_data_column]][rowData(cds1)[[unique_data_column]] %in% get_selected_genes(cds1)]
   cds2<-calculate_gene_dispersion(cds2)
-  plot_gene_dispersion(cds2)
+  p<-plot_gene_dispersion(cds2)
+  print(p)
   cds2<-select_genes(cds2, top_n = top_n, logmean_ul = logmean_ul, logmean_ll = logmean_ll)
-  plot_gene_dispersion(cds2)
+  p<-plot_gene_dispersion(cds2)
+  print(p)
   rsel<-rowData(cds2)[[row_data_column]][rowData(cds2)[[unique_data_column]] %in% get_selected_genes(cds2)]
   selected_common<-intersect(qsel, rsel)
   selected_common
@@ -204,3 +207,30 @@ pseudo_singlets <- function(se,
   rownames(sim_meta_data)<-colnames(syn_mat)
   new_cell_data_set(syn_mat, sim_meta_data, DataFrame(row.names = rownames(syn_mat), gene_short_name = rownames(syn_mat), id = rownames(syn_mat)))
 }
+
+
+
+#' Seurat to Monocle3
+#' @description Conver Seurat to Monocle3
+#' @param seu Seurat Object
+#' @param seu_rd Reduced dimname for seurat ('i.e. UMAP')
+#' @param assay_name Name of data slot ('i.e. RNA')
+#' @param mon_rd Reduced dimname for monocle3 ('i.e. UMAP')
+#' @import Seurat
+#' @import monocle3
+#' @return a cell_data_set object
+#' @export
+
+
+seurat_to_monocle3 <-function(seu, seu_rd="umap", mon_rd="UMAP", assay_name="RNA"){
+  cds<-new_cell_data_set(seu@assays[[assay_name]]@counts, 
+                         cell_metadata = seu@meta.data, 
+                         gene_metadata = DataFrame(
+                           row.names = rownames(seu@assays[[assay_name]]@counts), 
+                           id=rownames(seu@assays[[assay_name]]@counts), 
+                           gene_short_name=rownames(seu@assays[[assay_name]]@counts)))
+  reducedDims(cds)[[mon_rd]]<-seu@reductions[[seu_rd]]@cell.embeddings
+  cds
+}
+
+
