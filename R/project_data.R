@@ -211,6 +211,7 @@ liftover_projection<-function(projection, projector, projectee, projector_col=NU
 #' @param colors color palatte of projectee_col cells
 #' @export
 plot_projection<-function(projection, projector, projectee, projector_col=NULL, projectee_col=NULL){
+  projection<-as.list(projection)
   closest<-RANN::nn2(data = data.frame(UMAP1=projection[[2]]$UMAP1, UMAP2=projection[[2]]$UMAP2), query = data.frame(UMAP1=projection[[1]]$UMAP1, UMAP2=projection[[1]]$UMAP2), k = 1)
   projection[[2]]$neighbor<-"0_scRNA"
   if(!is.null(projector_col)){
