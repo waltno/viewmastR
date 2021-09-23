@@ -7,7 +7,11 @@ Author: Who wrote it
 Maintainer: Who to complain to <yourfault@somewhere.net>
 Description: More about what it does (maybe more than one line)
 License: What license is it under?
-Imports: Rcpp (>= 1.0.6)
+Imports: Rcpp (>= 1.0.6),
+  monocle3 (>= 0.1.0),
+  Matrix (>= 1.0),
+  ggplot2 (>= 3.0.0),
+  magrittr (> 1.0.0)
 LinkingTo: Rcpp, RcppArrayFire
 RoxygenNote: 7.1.1
 SystemRequirements: C++11

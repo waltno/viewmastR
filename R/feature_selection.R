@@ -6,7 +6,7 @@
 #' @param verbose A boolean value indicating whether to use verbose output during execution of this function. Can be set to FALSE for a cleaner output.
 #' @param threads The number of threads used for parallel execution
 #' @import monocle3
-#' @importFrom magrittr, "%>%"
+#' @importFrom magrittr "%>%"
 #' @export
 cluster_specific <- function(cds,
                              column = "cluster",
