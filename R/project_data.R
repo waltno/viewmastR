@@ -179,6 +179,50 @@ project_data <- function(
   return(out)
 }
 
+#' Liftover projection
+#' 
+#' @description This function transfers labels from a projector to a projectee
+#' @param projection projection object created by project_data function
+#' @param projector cell_data_set object with a reduced dimension matrix (currently LSI supported) as specified in
+#' reduced_dim argument and a model used to create a low dimensional embedding
+#' @param projectee a SummarizedExperiment type object (cell_data_set currently supported) to be projected using 
+#' the models contained in the projector
+#' @param projector_col column name of projector to color cells by using nearest neighbor
+#' @param projectee_col column name of projectee to color cells by
+#' @param colors color palatte of projectee_col cells
+#' @export
+liftover_projection<-function(projection, projector, projectee, projector_col=NULL){
+  closest<-RANN::nn2(data = data.frame(UMAP1=projection[[2]]$UMAP1, UMAP2=projection[[2]]$UMAP2), query = data.frame(UMAP1=projection[[1]]$UMAP1, UMAP2=projection[[1]]$UMAP2), k = 1)
+  projectee$liftover<-projector[[projector_col]][closest$nn.idx]
+  projectee
+}
+
+
+#' Plot a projection
+#' 
+#' @description This function plots a projection object created using the project_data function
+#' @param projection projection object created by project_data function
+#' @param projector cell_data_set object with a reduced dimension matrix (currently LSI supported) as specified in
+#' reduced_dim argument and a model used to create a low dimensional embedding
+#' @param projectee a SummarizedExperiment type object (cell_data_set currently supported) to be projected using 
+#' the models contained in the projector
+#' @param projector_col column name of projector to color cells by using nearest neighbor
+#' @param projectee_col column name of projectee to color cells by
+#' @param colors color palatte of projectee_col cells
+#' @export
+plot_projection<-function(projection, projector, projectee, projector_col=NULL, projectee_col=NULL){
+  closest<-RANN::nn2(data = data.frame(UMAP1=projection[[2]]$UMAP1, UMAP2=projection[[2]]$UMAP2), query = data.frame(UMAP1=projection[[1]]$UMAP1, UMAP2=projection[[1]]$UMAP2), k = 1)
+  projection[[2]]$neighbor<-"0_scRNA"
+  if(!is.null(projector_col)){
+    projection[[1]]$neighbor<-projector[[projector_col]][closest$nn.idx]
+  }
+  if(!is.null(projectee_col)){
+    projection[[1]]$neighbor<-colData(projectee)[[projectee_col]]
+  }
+  p<-as.data.frame(do.call(rbind, projection[2:1]))
+  g<-ggplot(p, aes(UMAP1, UMAP2, color=neighbor))+geom_point(size=0.3)+SFtheme
+}
+
 
 
 #' Extract data using a set of features

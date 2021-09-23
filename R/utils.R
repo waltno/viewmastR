@@ -251,6 +251,223 @@ lighten_darken_color<-function(col, amt) {
   return(toupper(paste("#", ret, sep="")))
 }
 
+#' @export
+mean_gene_expression<-function (cds, markers, group_cells_by = "cluster", reduction_method = "UMAP", 
+          norm_method = c("log", "size_only"), lower_threshold = 0, 
+          max.size = 10, ordering_type = c("cluster_row_col", "maximal_on_diag", 
+                                           "none"), axis_order = c("group_marker", "marker_group"), 
+          flip_percentage_mean = FALSE, pseudocount = 1, scale_max = 3, 
+          scale_min = -3) 
+{
+  assertthat::assert_that(methods::is(cds, "cell_data_set"))
+  if (!is.null(group_cells_by)) {
+    assertthat::assert_that(group_cells_by %in% c("cluster", 
+                                                  "partition") | group_cells_by %in% names(colData(cds)), 
+                            msg = paste("group_cells_by must be a column in", 
+                                        "the colData table."))
+  }
+  assertthat::assert_that("gene_short_name" %in% names(rowData(cds)), 
+                          msg = paste("This function requires a gene_short_name", 
+                                      "column in your rowData. If you do not have", "gene symbols, you can use other gene ids", 
+                                      "by running", "rowData(cds)$gene_short_name <- row.names(rowData(cds))"))
+  norm_method = match.arg(norm_method)
+  gene_ids = as.data.frame(fData(cds)) %>% tibble::rownames_to_column() %>% 
+    dplyr::filter(rowname %in% markers | gene_short_name %in% 
+                    markers) %>% dplyr::pull(rowname)
+  if (length(gene_ids) < 1) 
+    stop(paste("Please make sure markers are included in the gene_short_name\",\n               \"column of the rowData!"))
+  if (flip_percentage_mean == FALSE) {
+    major_axis <- 1
+    minor_axis <- 2
+  }
+  else if (flip_percentage_mean == TRUE) {
+    major_axis <- 2
+    minor_axis <- 1
+  }
+  exprs_mat <- t(as.matrix(exprs(cds)[gene_ids, ]))
+  exprs_mat <- reshape2::melt(exprs_mat)
+  colnames(exprs_mat) <- c("Cell", "Gene", "Expression")
+  exprs_mat$Gene <- as.character(exprs_mat$Gene)
+  if (group_cells_by == "cluster") {
+    cell_group <- tryCatch({
+      clusters(cds, reduction_method = reduction_method)
+    }, error = function(e) {
+      NULL
+    })
+  }
+  else if (group_cells_by == "partition") {
+    cell_group <- tryCatch({
+      partitions(cds, reduction_method = reduction_method)
+    }, error = function(e) {
+      NULL
+    })
+  }
+  else {
+    cell_group <- colData(cds)[, group_cells_by]
+  }
+  if (length(unique(cell_group)) < 2) {
+    stop(paste("Only one type in group_cells_by. To use plot_genes_by_group,", 
+               "please specify a group with more than one type. "))
+  }
+  names(cell_group) = colnames(cds)
+  exprs_mat$Group <- cell_group[exprs_mat$Cell]
+  exprs_mat = exprs_mat %>% dplyr::filter(is.na(Group) == FALSE)
+  ExpVal <- exprs_mat %>% dplyr::group_by(Group, Gene) %>% 
+    dplyr::summarize(mean = mean(log(Expression + pseudocount)), 
+                     percentage = sum(Expression > lower_threshold)/length(Expression))
+  ExpVal$mean <- ifelse(ExpVal$mean < scale_min, scale_min, 
+                        ExpVal$mean)
+  ExpVal$mean <- ifelse(ExpVal$mean > scale_max, scale_max, 
+                        ExpVal$mean)
+  ExpVal$Gene <- fData(cds)[ExpVal$Gene, "gene_short_name"]
+  res <- reshape2::dcast(ExpVal[, 1:4], Group ~ Gene, value.var = colnames(ExpVal)[2 + 
+                                                                                     major_axis])
+  group_id <- res[, 1]
+  out<-t(res[, -1])
+  rownames(out)<-colnames(res[, -1])
+  colnames(out)<-res$Group
+  out
+}
 
 
+plot_genes_by_group<-function (cds, markers, group_cells_by = "cluster", reduction_method = "UMAP", 
+                               norm_method = c("log", "size_only"), lower_threshold = 0, 
+                               max.size = 10, ordering_type = c("cluster_row_col", "maximal_on_diag", 
+                                                                "none"), axis_order = c("group_marker", "marker_group"), 
+                               flip_percentage_mean = FALSE, scale_row=T, pseudocount = 1, scale_max = 3, 
+                               scale_min = -3) 
+{
+  assertthat::assert_that(methods::is(cds, "cell_data_set"))
+  if (!is.null(group_cells_by)) {
+    assertthat::assert_that(group_cells_by %in% c("cluster", 
+                                                  "partition") | group_cells_by %in% names(colData(cds)), 
+                            msg = paste("group_cells_by must be a column in", 
+                                        "the colData table."))
+  }
+  assertthat::assert_that("gene_short_name" %in% names(rowData(cds)), 
+                          msg = paste("This function requires a gene_short_name", 
+                                      "column in your rowData. If you do not have", "gene symbols, you can use other gene ids", 
+                                      "by running", "rowData(cds)$gene_short_name <- row.names(rowData(cds))"))
+  norm_method = match.arg(norm_method)
+  gene_ids = as.data.frame(fData(cds)) %>% tibble::rownames_to_column() %>% 
+    dplyr::filter(rowname %in% markers | gene_short_name %in% 
+                    markers) %>% dplyr::pull(rowname)
+  if (length(gene_ids) < 1) 
+    stop(paste("Please make sure markers are included in the gene_short_name\",\n               \"column of the rowData!"))
+  if (flip_percentage_mean == FALSE) {
+    major_axis <- 1
+    minor_axis <- 2
+  }
+  else if (flip_percentage_mean == TRUE) {
+    major_axis <- 2
+    minor_axis <- 1
+  }
+  exprs_mat <- t(as.matrix(exprs(cds)[gene_ids, ]))
+  exprs_mat <- reshape2::melt(exprs_mat)
+  colnames(exprs_mat) <- c("Cell", "Gene", "Expression")
+  exprs_mat$Gene <- as.character(exprs_mat$Gene)
+  if (group_cells_by == "cluster") {
+    cell_group <- tryCatch({
+      clusters(cds, reduction_method = reduction_method)
+    }, error = function(e) {
+      NULL
+    })
+  }
+  else if (group_cells_by == "partition") {
+    cell_group <- tryCatch({
+      partitions(cds, reduction_method = reduction_method)
+    }, error = function(e) {
+      NULL
+    })
+  }
+  else {
+    cell_group <- colData(cds)[, group_cells_by]
+  }
+  if (length(unique(cell_group)) < 2) {
+    stop(paste("Only one type in group_cells_by. To use plot_genes_by_group,", 
+               "please specify a group with more than one type. "))
+  }
+  names(cell_group) = colnames(cds)
+  exprs_mat$Group <- cell_group[exprs_mat$Cell]
+  exprs_mat = exprs_mat %>% dplyr::filter(is.na(Group) == FALSE)
+  ExpVal <- exprs_mat %>% dplyr::group_by(Group, Gene) %>% 
+    dplyr::summarize(mean = mean(log(Expression + pseudocount)), 
+                     percentage = sum(Expression > lower_threshold)/length(Expression))
+  ExpVal$mean <- ifelse(ExpVal$mean < scale_min, scale_min, 
+                        ExpVal$mean)
+  ExpVal$mean <- ifelse(ExpVal$mean > scale_max, scale_max, 
+                        ExpVal$mean)
+  ExpVal$Gene <- fData(cds)[ExpVal$Gene, "gene_short_name"]
+  res <- reshape2::dcast(ExpVal[, 1:4], Group ~ Gene, value.var = colnames(ExpVal)[2 + 
+                                                                                     major_axis])
+  group_id <- res[, 1]
+  res <- res[, -1]
+  if(scale_row){
+    res<-t(scale(t(res)))
+  }
+  row.names(res) <- group_id
+  if (ordering_type == "cluster_row_col") {
+    row_dist <- stats::as.dist((1 - stats::cor(t(res)))/2)
+    row_dist[is.na(row_dist)] <- 1
+    col_dist <- stats::as.dist((1 - stats::cor(res))/2)
+    col_dist[is.na(col_dist)] <- 1
+    ph <- pheatmap::pheatmap(res, useRaster = T, cluster_cols = TRUE, 
+                             cluster_rows = TRUE, show_rownames = F, show_colnames = F, 
+                             clustering_distance_cols = col_dist, clustering_distance_rows = row_dist, 
+                             clustering_method = "ward.D2", silent = TRUE, filename = NA)
+    ExpVal$Gene <- factor(ExpVal$Gene, levels = colnames(res)[ph$tree_col$order])
+    ExpVal$Group <- factor(ExpVal$Group, levels = row.names(res)[ph$tree_row$order])
+  }
+  else if (ordering_type == "maximal_on_diag") {
+    order_mat <- t(apply(res, major_axis, order))
+    max_ind_vec <- c()
+    for (i in 1:nrow(order_mat)) {
+      tmp <- max(which(!(order_mat[i, ] %in% max_ind_vec)))
+      max_ind_vec <- c(max_ind_vec, order_mat[i, tmp])
+    }
+    max_ind_vec <- max_ind_vec[!is.na(max_ind_vec)]
+    if (major_axis == 1) {
+      max_ind_vec <- c(max_ind_vec, setdiff(1:length(markers), 
+                                            max_ind_vec))
+      ExpVal$Gene <- factor(ExpVal$Gene, levels = dimnames(res)[[2]][max_ind_vec])
+    }
+    else {
+      max_ind_vec <- c(max_ind_vec, setdiff(1:length(unique(exprs_mat$Group)), 
+                                            max_ind_vec))
+      ExpVal$Group <- factor(ExpVal$Group, levels = dimnames(res)[[1]][max_ind_vec])
+    }
+  }
+  else if (ordering_type == "none") {
+    ExpVal$Gene <- factor(ExpVal$Gene, levels = markers)
+  }
+  if (flip_percentage_mean) {
+    g <- ggplot(ExpVal, aes(y = Gene, x = Group)) + geom_point(aes(colour = percentage, 
+                                                                   size = mean)) + viridis::scale_color_viridis(name = "percentage") + 
+      scale_size(name = "log(mean + 0.1)", range = c(0, 
+                                                     max.size))
+  }
+  else {
+    g <- ggplot(ExpVal, aes(y = Gene, x = Group)) + geom_point(aes(colour = mean, 
+                                                                   size = percentage)) + viridis::scale_color_viridis(name = "log(mean + 0.1)") + 
+      scale_size(name = "percentage", range = c(0, max.size))
+  }
+  if (group_cells_by == "cluster") {
+    g <- g + xlab("Cluster")
+  }
+  else if (group_cells_by == "partition") {
+    g <- g + xlab("Partition")
+  }
+  else {
+    g <- g + xlab(group_cells_by)
+  }
+  g <- g + ylab("Gene") + monocle3:::monocle_theme_opts() + theme(axis.text.x = element_text(angle = 30, 
+                                                                                  hjust = 1))
+  if (axis_order == "marker_group") {
+    g <- g + coord_flip()
+  }
+  g
+}
 
+  
+  
+  
