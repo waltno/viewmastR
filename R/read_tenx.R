@@ -56,15 +56,17 @@ read_cds_starsolo_file = function(folder) {
   if(!file.exists(folder)){stop(paste0("File ", folder," not found"))}
   files<-c("features.tsv", "barcodes.tsv", "matrix.mtx")
   ofiles<-c("genes.tsv", "barcodes.tsv", "matrix.mtx")
-  found<-sapply(files, function(file) file.exists(file.path(folder, file)))
-  ofound<-sapply(ofiles, function(file) file.exists(file.path(folder, file)))
-  if(all(ofound)){
-    files<-ofiles
-  }else{
-    if(!all(found)){
-      stop(paste0("Required files not found in: ", folder))
-    }
+  zfiles<-paste0(files, ".gz")
+  zofiles<-paste0(ofiles, ".gz")
+  possibilities<-list("files"=files, "ofiles"=ofiles, "zfiles"=ofiles, "zofiles"=zofiles)
+  found<-lapply(possibilities, function(l){
+    found <- sapply(l, function(file) file.exists(file.path(folder, file)))
+    allfound <- all(found)
+  })
+  if(length(which(found==T))==0){
+    stop(paste0("Required files not found in: ", folder))
   }
+  files <- base::get(names(which(found==T)[1]))
   barcodes = fread(file.path(folder, files[2]), header = F)$V1
   feats<- fread(file.path(folder, files[1]), header=F)
   gene_ids = feats$V1
