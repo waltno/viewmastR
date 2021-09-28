@@ -233,4 +233,30 @@ seurat_to_monocle3 <-function(seu, seu_rd="umap", mon_rd="UMAP", assay_name="RNA
   cds
 }
 
+#' Monocle3 to Seurat
+#' @description Conver Monocle3 cell data set to a Seurat object.  For a variety of reasons, the recommendations are to use this funciont
+#' only to generate skeleton Seurat objects that can be used for plotting and not much else.  The resulting object will not contain PCA reducitons or 
+#' nearest neighbor graphs.
+#' @param seu Seurat Object
+#' @param seu_rd Reduced dimname for seurat ('i.e. UMAP')
+#' @param assay_name Name of data slot ('i.e. RNA')
+#' @param mon_rd Reduced dimname for monocle3 ('i.e. UMAP')
+#' @param row.names rowData column to use as rownames for Seurat object
+#' @import Seurat
+#' @import monocle3
+#' @return a cell_data_set object
+#' @export
+
+
+monocle3_to_seurat <-function(cds, seu_rd="umap", mon_rd="UMAP", assay_name="RNA", row.names="gene_short_name", normalize=T){
+  warning("this function will create a Seurat object with only 1 reduced dimension; currently only UMAP is supported")
+  counts <- exprs(cds)
+  rownames(counts) <- rowData(cds)[[row.names]]
+  seu<-CreateSeuratObject(counts, meta.data = data.frame(colData(cds)))
+  keyname<-paste0(seu_rd, "_")
+  colnames(reducedDims(cds)[[mon_rd]])<-paste0(keyname, 1:dim(reducedDims(cds)[[mon_rd]])[2])
+  seu@reductions[[seu_rd]]<-Seurat::CreateDimReducObject(embeddings = reducedDims(cds)[[mon_rd]], key = keyname, assay = assay_name, )
+  if(normalize){seu<-NormalizeData(seu)}
+  seu
+}
 
