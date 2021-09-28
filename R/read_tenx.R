@@ -114,7 +114,7 @@ files3_prep<-function(folder){
     }
     uz_found<-sapply(uzfiles_to_check, function(file) file.exists(file.path(folder, "filtered_feature_bc_matrix", file)))
     z_found<-sapply(zfiles_to_check, function(file) file.exists(file.path(folder, "filtered_feature_bc_matrix", file)))
-    if(all(uz_found) | all(z_fount)){
+    if(all(uz_found) | all(z_found)){
       return(file.path(folder,"filtered_feature_bc_matrix"))
     }
     uz_found<-sapply(uzfiles_to_check, function(file) file.exists(file.path(folder, "raw_feature_bc_matrix", file)))
