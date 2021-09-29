@@ -260,3 +260,46 @@ monocle3_to_seurat <-function(cds, seu_rd="umap", mon_rd="UMAP", assay_name="RNA
   seu
 }
 
+
+#' Franken
+#' @description Will prepare monocle3 objects for use across species
+#' @param cds cell_data_set
+#' @param rowdata_col rowData column to lookup 
+#' @param from_species currently only mouse ("mm") and human ("hs") symbols supported
+#' @import monocle3
+#' @return a cell_data_set object
+#' @export
+
+franken<-function(cds, rowdata_col="gene_short_name", from_species="mm", to_species="hs", trim=T){
+  message("Currently only human and mgi symbols supported")
+  if(from_species==to_species){return(cds)}
+  labels<-data.frame(mm=c(dataset="mmusculus_gene_ensembl", prefix="mgi"), hs=c(dataset="hsapiens_gene_ensembl", prefix="hgnc"))
+  from_X<-rowData(cds)[[rowdata_col]]
+  from_dataset=labels[,from_species][1]
+  to_dataset=labels[,to_species][1]
+  from_type = paste0(labels[,from_species][2], "_symbol")
+  to_type = paste0(labels[,to_species][2], "_symbol")
+  from_labelout<-paste0(toupper(labels[,from_species][2]), ".symbol")
+  to_labelout<-paste0(toupper(labels[,to_species][2]), ".symbol")
+  franken_table<-franken_helper(from_X, from_dataset, to_dataset, from_type, to_type)
+  new_column_name<-paste0("franken_", from_species, "_to_", to_species)
+  rowData(cds)[[new_column_name]]<-franken_table[[to_labelout]][match(from_X, franken_table[[from_labelout]])]
+  rowData(cds)[[new_column_name]][is.na(rowData(cds)[[new_column_name]])]<-"Unknown"
+  if(trim){
+    cds<-cds[!rowData(cds)[[new_column_name]] %in% "Unknown",]
+  }
+  rownames(cds)<-rowData(cds)[[new_column_name]]
+  rowData(cds)[[rowdata_col]]<-rowData(cds)[[new_column_name]]
+  cds
+}
+
+
+#' @import biomaRt
+#' @export
+franken_helper <- function(x, from_dataset="mmusculus_gene_ensembl", to_dataset="hsapiens_gene_ensembl", from_type="mgi_symbol", to_type="hgnc_symbol"){
+  from_mart = useMart("ensembl", dataset = from_dataset)
+  to_mart = useMart("ensembl", dataset = to_dataset)
+  genesV2 = getLDS(attributes = c(from_type), filters = from_type, values = x , mart = from_mart, attributesL = c(to_type), martL = to_mart, uniqueRows=F)
+  return(genesV2)
+}
+
