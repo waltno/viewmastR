@@ -109,6 +109,7 @@ af::array naive_bayes(RcppArrayFire::typed_array<f32> train_feats,
                  int num_classes,
                  RcppArrayFire::typed_array<f32> query,
                  bool verbose = false,
+                 bool benchmark = false,
                  int device = 0) {
   try {
     af::setDevice(device);
@@ -138,7 +139,9 @@ af::array naive_bayes(RcppArrayFire::typed_array<f32> train_feats,
   if(verbose) {
     fprintf(stderr,"Training samples: %4d, Testing samples: %4d\n", train_labels.dims(0), test_labels.dims(0));
     fprintf(stderr,"Accuracy on testing  data: %2.2f\n", nb_accuracy(res_labels, test_labels));
-    benchmark_nb(train_feats, test_feats, train_labels, num_classes);
+    if(benchmark){
+      benchmark_nb(train_feats, test_feats, train_labels, num_classes);
+    }
   }
   return query_labels;
 }

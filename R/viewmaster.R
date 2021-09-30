@@ -38,8 +38,8 @@ viewmaster <-function(query_cds,
   query<-as.matrix(query_mat)
   
   if(tf_idf){
-    data<-tf_idf_transform(data, LSImethod)
-    query<-tf_idf_transform(query, LSImethod)
+    data<-as.matrix(tf_idf_transform(data, LSImethod))
+    query<-as.matrix(tf_idf_transform(query, LSImethod))
   }
   labf<-as.factor(colData(ref_cds)[[ref_celldata_col]])
   labn<-as.numeric(labf)-1

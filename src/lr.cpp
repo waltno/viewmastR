@@ -174,6 +174,7 @@ af::array lr(RcppArrayFire::typed_array<f32> train_feats,
                  int num_classes,
                  RcppArrayFire::typed_array<f32> query,
                  bool verbose = false,
+                 bool benchmark = false,
                  int device = 0) {
   try {
     af::setDevice(device);
@@ -223,7 +224,9 @@ af::array lr(RcppArrayFire::typed_array<f32> train_feats,
          accuracy(test_outputs, test_targets));
     fprintf(stderr, "Maximum error on testing data: %2.2f\n",
          abserr(test_outputs, test_targets));
-    benchmark_logistic_regression(train_feats, train_targets, test_feats);
+    if(benchmark){
+      benchmark_logistic_regression(train_feats, train_targets, test_feats);
+    }
   }
   return query_outputs;
 }

@@ -117,7 +117,7 @@ static void benchmark_softmax_regression(const array &train_feats,
 
 
 // Demo of one vs all logistic regression
-static int logit_demo_run (int perc, bool verbose = true) {
+static int logit_demo_run (int perc, bool verbose = true, bool benchmark = false) {
   array train_images, train_targets;
   array test_images, test_targets;
   int num_train, num_test, num_classes;
@@ -164,6 +164,8 @@ static int logit_demo_run (int perc, bool verbose = true) {
             accuracy(test_outputs, test_targets));
     fprintf(stderr, "Maximum error on testing data: %2.2f\n",
             abserr(test_outputs, test_targets));
+  }
+  if(benchmark){
     benchmark_softmax_regression(train_feats, train_targets, test_feats);
   }
   return 0;
@@ -178,6 +180,7 @@ af::array smr(RcppArrayFire::typed_array<f32> train_feats,
                  int num_classes,
                  RcppArrayFire::typed_array<f32> query,
                  bool verbose = false,
+                 bool benchmark = false,
                  int device = 0) {
   try {
     af::setDevice(device);
@@ -227,6 +230,8 @@ af::array smr(RcppArrayFire::typed_array<f32> train_feats,
             accuracy(test_outputs, test_targets));
     fprintf(stderr, "Maximum error on testing data: %2.2f\n",
             abserr(test_outputs, test_targets));
+  }
+  if(benchmark){
     benchmark_softmax_regression(train_feats, train_targets, test_feats);
   }
   return query_outputs;

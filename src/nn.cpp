@@ -204,7 +204,7 @@ double ann::train(const array &input, const array &target, double alpha,
 }
 
 
-static int ann_demo_run(int perc, const dtype dt, bool verbose = false) {
+static int ann_demo_run(int perc, const dtype dt, bool verbose = false, bool benchmark = false) {
   fprintf(stderr,"** ArrayFire ANN Demo **\n");
   array train_images, test_images;
   array train_target, test_target;
@@ -258,11 +258,14 @@ static int ann_demo_run(int perc, const dtype dt, bool verbose = false) {
   array train_output = network.predict(train_feats);
   array test_output  = network.predict(test_feats);
   // Benchmark prediction
-  af::sync();
-  timer::start();
-  for (int i = 0; i < 100; i++) { network.predict(test_feats); }
-  af::sync();
-  double test_time = timer::stop() / 100;
+  double test_time = 0.0;
+  if(benchmark){
+    af::sync();
+    timer::start();
+    for (int i = 0; i < 100; i++) { network.predict(test_feats); }
+    af::sync();
+    double test_time = timer::stop() / 100;
+  }
   fprintf(stderr,"\nTraining set:\n");
   fprintf(stderr,"Accuracy on training data: %2.2f\n",
          accuracy(train_output, train_target));
@@ -270,7 +273,9 @@ static int ann_demo_run(int perc, const dtype dt, bool verbose = false) {
   fprintf(stderr,"Accuracy on testing  data: %2.2f\n",
          accuracy(test_output, test_target));
   fprintf(stderr,"\nTraining time: %4.4lf s\n", train_time);
-  fprintf(stderr,"Prediction time: %4.4lf s\n\n", test_time);
+  if(benchmark){
+    fprintf(stderr,"Prediction time: %4.4lf s\n\n", test_time);
+  }
   // if (!console) {
   //   // Get 20 random test images.
   //   test_output = test_output.T();
@@ -294,7 +299,8 @@ af::array af_nn(RcppArrayFire::typed_array<f32> train_feats,
                  int max_epochs = 250,    // max epochs
                  int batch_size = 100,    // batch size
                  float max_error = 0.5,    // max error
-                 bool verbose = true) {
+                 bool verbose = true,
+                 bool benchmark = false) {
   if(verbose) {fprintf(stderr,"** ArrayFire ANN**\n");}
   if (device < 0 || device > 1) {
     std::cerr << "Bad device: " <<device << std::endl;
@@ -360,11 +366,14 @@ af::array af_nn(RcppArrayFire::typed_array<f32> train_feats,
   // Benchmark prediction
   af::sync();
   array query_output  = network.predict(query_feats);
+  double test_time = 0.0;
   if(verbose) {
-    timer::start();
-    for (int i = 0; i < 100; i++) { network.predict(test_feats); }
-    af::sync();
-    double test_time = timer::stop() / 100;
+    if(benchmark){
+      timer::start();
+      for (int i = 0; i < 100; i++) { network.predict(test_feats); }
+      af::sync();
+      double test_time = timer::stop() / 100;
+    }
     fprintf(stderr,"\nTraining set:\n");
     fprintf(stderr,"Accuracy on training data: %2.2f\n",
            accuracy(train_output, train_target));
@@ -372,7 +381,9 @@ af::array af_nn(RcppArrayFire::typed_array<f32> train_feats,
     fprintf(stderr,"Accuracy on testing  data: %2.2f\n",
            accuracy(test_output, test_target));
     fprintf(stderr,"\nTraining time: %4.4lf s\n", train_time);
-    fprintf(stderr,"Prediction time: %4.4lf s\n\n", test_time);
+    if(benchmark){
+      fprintf(stderr,"Prediction time: %4.4lf s\n\n", test_time);
+    }
   }
   return query_output;
 }
@@ -380,7 +391,7 @@ af::array af_nn(RcppArrayFire::typed_array<f32> train_feats,
 
 //' @export
 // [[Rcpp::export]]
-int ann_demo(int device = 0, int perc = 80, std::string dts = "f32", bool verbose = true) {
+int ann_demo(int device = 0, int perc = 80, std::string dts = "f32", bool verbose = true, bool benchmark = false) {
   if (device < 0 || device > 1) {
     std::cerr << "Bad device: " <<device << std::endl;
     return EXIT_FAILURE;
@@ -405,7 +416,7 @@ int ann_demo(int device = 0, int perc = 80, std::string dts = "f32", bool verbos
     af::setDevice(device);
     std::string info_string = af::infoString();
     std::cerr << info_string;
-    return ann_demo_run(perc, dt, verbose = verbose);
+    return ann_demo_run(perc, dt, verbose = verbose, benchmark = benchmark);
   } catch (af::exception &ae) { std::cerr << ae.what() << std::endl; }
   return 0;
 }

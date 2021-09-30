@@ -137,6 +137,7 @@ af::array bagging(RcppArrayFire::typed_array<f32> train_feats,
                       int num_classes,
                       RcppArrayFire::typed_array<f32> query,
                       bool verbose = true,
+                      bool benchmark = false,
                       int num_models  = 10,
                       int sample_size = 1000,
                       int device = 0) {

@@ -306,7 +306,8 @@ af::array af_dbn(RcppArrayFire::typed_array<f32> train_feats,
                  int nn_epochs = 250,    // nn epochs
                  int batch_size = 100,    // batch size
                  float max_error = 0.5,    // max error
-                 bool verbose = true) {
+                 bool verbose = true,
+                 bool benchmark = false) {
   if (verbose) { fprintf(stderr,"** ArrayFire DBN**\n"); };
   if (device < 0 || device > 1) {
     std::cerr << "Bad device: " <<device << std::endl;
@@ -375,11 +376,14 @@ af::array af_dbn(RcppArrayFire::typed_array<f32> train_feats,
   array test_output  = network.predict(test_feats);
   // array query_output  = network.predict(query_feats);
   // Benchmark prediction
-  af::sync();
-  timer::start();
-  for (int i = 0; i < 100; i++) { network.predict(test_feats); }
-  af::sync();
-  double test_time = timer::stop() / 100;
+  double test_time = 0.0;
+  if(benchmark){
+    af::sync();
+    timer::start();
+    for (int i = 0; i < 100; i++) { network.predict(test_feats); }
+    af::sync();
+    double test_time = timer::stop() / 100;
+  }
   if (verbose) {
     fprintf(stderr,"\nTraining set:\n");
     fprintf(stderr,"Accuracy on training data: %2.2f\n",
@@ -388,7 +392,9 @@ af::array af_dbn(RcppArrayFire::typed_array<f32> train_feats,
     fprintf(stderr,"Accuracy on testing  data: %2.2f\n",
            accuracy(test_output, test_target));
     fprintf(stderr,"\nTraining time: %4.4lf s\n", train_time);
-    fprintf(stderr,"Prediction time: %4.4lf s\n\n", test_time);
+    if(benchmark){
+      fprintf(stderr,"Prediction time: %4.4lf s\n\n", test_time);
+    }
   }
   array query_output  = network.predict(query_feats);
   return query_output;
