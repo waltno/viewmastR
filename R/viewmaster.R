@@ -14,6 +14,8 @@ viewmaster <-function(query_cds,
                       FUNC=c("naive_bayes", "neural_network", "bagging","softmax_regression", "logistic_regression", "deep_belief_nn", "perceptron"),
                         selected_genes=NULL,
                       train_frac = 0.8,
+                      tf_idf=F,
+                      LSImethod=1,
                       verbose = T){
   FUNC=match.arg(FUNC)
   common_list<-viewmaster::common_features(list(ref_cds, query_cds))
@@ -34,7 +36,11 @@ viewmaster <-function(query_cds,
 
   data<-as.matrix(ref_mat)
   query<-as.matrix(query_mat)
-
+  
+  if(tf_idf){
+    data<-tf_idf_transform(data, LSImethod)
+    query<-tf_idf_transform(query, LSImethod)
+  }
   labf<-as.factor(colData(ref_cds)[[ref_celldata_col]])
   labn<-as.numeric(labf)-1
   labels<-levels(labf)
