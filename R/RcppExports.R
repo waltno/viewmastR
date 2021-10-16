@@ -22,8 +22,8 @@ dbn_demo <- function(device = 0L, perc = 80L, dts = "f32") {
 }
 
 #' @export
-lr <- function(train_feats, test_feats, train_targets, test_targets, num_classes, query, verbose = FALSE, benchmark = FALSE, device = 0L) {
-    .Call('_viewmaster_lr', PACKAGE = 'viewmaster', train_feats, test_feats, train_targets, test_targets, num_classes, query, verbose, benchmark, device)
+lr <- function(train_feats, test_feats, train_targets, test_targets, num_classes, query, learning_rate = 2.0, verbose = FALSE, benchmark = FALSE, device = 0L) {
+    .Call('_viewmaster_lr', PACKAGE = 'viewmaster', train_feats, test_feats, train_targets, test_targets, num_classes, query, learning_rate, verbose, benchmark, device)
 }
 
 #' @export
@@ -47,8 +47,8 @@ test_backends <- function() {
 }
 
 #' @export
-af_nn <- function(train_feats, test_feats, train_target, test_target, num_classes, query_feats, device = 0L, dts = "f32", learning_rate = 2.0, max_epochs = 250L, batch_size = 100L, max_error = 0.5, verbose = TRUE, benchmark = FALSE) {
-    .Call('_viewmaster_af_nn', PACKAGE = 'viewmaster', train_feats, test_feats, train_target, test_target, num_classes, query_feats, device, dts, learning_rate, max_epochs, batch_size, max_error, verbose, benchmark)
+af_nn <- function(train_feats, test_feats, train_target, test_target, num_classes, layers, query_feats, device = 0L, dts = "f32", learning_rate = 2.0, max_epochs = 250L, batch_size = 100L, max_error = 0.5, verbose = TRUE, benchmark = FALSE) {
+    .Call('_viewmaster_af_nn', PACKAGE = 'viewmaster', train_feats, test_feats, train_target, test_target, num_classes, layers, query_feats, device, dts, learning_rate, max_epochs, batch_size, max_error, verbose, benchmark)
 }
 
 #' @export

@@ -10,6 +10,52 @@ setwd("~/develop/viewmaster")
 
 roxygen2::roxygenize(".")
 
+#mnist arrayfire
+library(viewmaster)
+data<-keras::dataset_mnist()
+dim(data$train$x)<-c(60000, 28*28)
+data$train$x<-data$train$x/255
+data$train$y<-model.matrix(~0+factor(data$train$y))
+colnames(data$train$y)<-0:9
+dim(data$test$x)<-c(10000, 28*28)
+data$train$y<-data$train$y/255
+data$test$y<-model.matrix(~0+factor(data$test$y))
+colnames(data$test$y)<-0:9
+out<-af_nn(t(data$train$x)[,1:10000], 
+           t(data$test$x), 
+           data$train$y[1:10000,], 
+           data$test$y,
+           max_error = 0.01,
+           learning_rate = 0.01, 
+           num_classes = 10, 
+           query = t(data$test$x),
+           layers = c(784, 500, 100, 10),  
+           verbose = T)
+
+
+data<-keras::dataset_mnist()
+dim(data$train$x)<-c(60000, 28*28)
+#data$train$x<-data$train$x/255
+data$train$y<-model.matrix(~0+factor(data$train$y))
+#colnames(data$train$y)<-0:9
+dim(data$test$x)<-c(10000, 28*28)
+#data$train$y<-data$train$y/255
+data$test$y<-model.matrix(~0+factor(data$test$y))
+colnames(data$test$y)<-0:9
+out<-af_nn(t(data$train$x)[,1:10000], 
+           t(data$test$x), 
+           data$train$y[1:10000,], 
+           data$test$y,
+           max_error = 0.5,
+           learning_rate = 2.0, 
+           num_classes = 10, 
+           query = t(data$test$x),
+           layers = c(784, 100, 50),  
+           verbose = T)
+
+t(data$train$x)[,1]
+
+ann_demo()
 
 ## arrayfire testing
 library(viewmaster)

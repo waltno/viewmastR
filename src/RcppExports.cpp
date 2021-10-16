@@ -78,8 +78,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // lr
-af::array lr(RcppArrayFire::typed_array<f32> train_feats, RcppArrayFire::typed_array<f32> test_feats, RcppArrayFire::typed_array<s32> train_targets, RcppArrayFire::typed_array<s32> test_targets, int num_classes, RcppArrayFire::typed_array<f32> query, bool verbose, bool benchmark, int device);
-RcppExport SEXP _viewmaster_lr(SEXP train_featsSEXP, SEXP test_featsSEXP, SEXP train_targetsSEXP, SEXP test_targetsSEXP, SEXP num_classesSEXP, SEXP querySEXP, SEXP verboseSEXP, SEXP benchmarkSEXP, SEXP deviceSEXP) {
+af::array lr(RcppArrayFire::typed_array<f32> train_feats, RcppArrayFire::typed_array<f32> test_feats, RcppArrayFire::typed_array<s32> train_targets, RcppArrayFire::typed_array<s32> test_targets, int num_classes, RcppArrayFire::typed_array<f32> query, float learning_rate, bool verbose, bool benchmark, int device);
+RcppExport SEXP _viewmaster_lr(SEXP train_featsSEXP, SEXP test_featsSEXP, SEXP train_targetsSEXP, SEXP test_targetsSEXP, SEXP num_classesSEXP, SEXP querySEXP, SEXP learning_rateSEXP, SEXP verboseSEXP, SEXP benchmarkSEXP, SEXP deviceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -89,10 +89,11 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< RcppArrayFire::typed_array<s32> >::type test_targets(test_targetsSEXP);
     Rcpp::traits::input_parameter< int >::type num_classes(num_classesSEXP);
     Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32> >::type query(querySEXP);
+    Rcpp::traits::input_parameter< float >::type learning_rate(learning_rateSEXP);
     Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
     Rcpp::traits::input_parameter< bool >::type benchmark(benchmarkSEXP);
     Rcpp::traits::input_parameter< int >::type device(deviceSEXP);
-    rcpp_result_gen = Rcpp::wrap(lr(train_feats, test_feats, train_targets, test_targets, num_classes, query, verbose, benchmark, device));
+    rcpp_result_gen = Rcpp::wrap(lr(train_feats, test_feats, train_targets, test_targets, num_classes, query, learning_rate, verbose, benchmark, device));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -148,8 +149,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // af_nn
-af::array af_nn(RcppArrayFire::typed_array<f32> train_feats, RcppArrayFire::typed_array<f32> test_feats, RcppArrayFire::typed_array<s32> train_target, RcppArrayFire::typed_array<s32> test_target, int num_classes, RcppArrayFire::typed_array<f32> query_feats, int device, std::string dts, float learning_rate, int max_epochs, int batch_size, float max_error, bool verbose, bool benchmark);
-RcppExport SEXP _viewmaster_af_nn(SEXP train_featsSEXP, SEXP test_featsSEXP, SEXP train_targetSEXP, SEXP test_targetSEXP, SEXP num_classesSEXP, SEXP query_featsSEXP, SEXP deviceSEXP, SEXP dtsSEXP, SEXP learning_rateSEXP, SEXP max_epochsSEXP, SEXP batch_sizeSEXP, SEXP max_errorSEXP, SEXP verboseSEXP, SEXP benchmarkSEXP) {
+af::array af_nn(RcppArrayFire::typed_array<f32> train_feats, RcppArrayFire::typed_array<f32> test_feats, RcppArrayFire::typed_array<s32> train_target, RcppArrayFire::typed_array<s32> test_target, int num_classes, std::vector<int> layers, RcppArrayFire::typed_array<f32> query_feats, int device, std::string dts, float learning_rate, int max_epochs, int batch_size, float max_error, bool verbose, bool benchmark);
+RcppExport SEXP _viewmaster_af_nn(SEXP train_featsSEXP, SEXP test_featsSEXP, SEXP train_targetSEXP, SEXP test_targetSEXP, SEXP num_classesSEXP, SEXP layersSEXP, SEXP query_featsSEXP, SEXP deviceSEXP, SEXP dtsSEXP, SEXP learning_rateSEXP, SEXP max_epochsSEXP, SEXP batch_sizeSEXP, SEXP max_errorSEXP, SEXP verboseSEXP, SEXP benchmarkSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -158,6 +159,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< RcppArrayFire::typed_array<s32> >::type train_target(train_targetSEXP);
     Rcpp::traits::input_parameter< RcppArrayFire::typed_array<s32> >::type test_target(test_targetSEXP);
     Rcpp::traits::input_parameter< int >::type num_classes(num_classesSEXP);
+    Rcpp::traits::input_parameter< std::vector<int> >::type layers(layersSEXP);
     Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32> >::type query_feats(query_featsSEXP);
     Rcpp::traits::input_parameter< int >::type device(deviceSEXP);
     Rcpp::traits::input_parameter< std::string >::type dts(dtsSEXP);
@@ -167,7 +169,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< float >::type max_error(max_errorSEXP);
     Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
     Rcpp::traits::input_parameter< bool >::type benchmark(benchmarkSEXP);
-    rcpp_result_gen = Rcpp::wrap(af_nn(train_feats, test_feats, train_target, test_target, num_classes, query_feats, device, dts, learning_rate, max_epochs, batch_size, max_error, verbose, benchmark));
+    rcpp_result_gen = Rcpp::wrap(af_nn(train_feats, test_feats, train_target, test_target, num_classes, layers, query_feats, device, dts, learning_rate, max_epochs, batch_size, max_error, verbose, benchmark));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -266,12 +268,12 @@ static const R_CallMethodDef CallEntries[] = {
     {"_viewmaster_bagging", (DL_FUNC) &_viewmaster_bagging, 11},
     {"_viewmaster_af_dbn", (DL_FUNC) &_viewmaster_af_dbn, 16},
     {"_viewmaster_dbn_demo", (DL_FUNC) &_viewmaster_dbn_demo, 3},
-    {"_viewmaster_lr", (DL_FUNC) &_viewmaster_lr, 9},
+    {"_viewmaster_lr", (DL_FUNC) &_viewmaster_lr, 10},
     {"_viewmaster_lr_demo", (DL_FUNC) &_viewmaster_lr_demo, 2},
     {"_viewmaster_naive_bayes", (DL_FUNC) &_viewmaster_naive_bayes, 9},
     {"_viewmaster_naive_bayes_demo", (DL_FUNC) &_viewmaster_naive_bayes_demo, 2},
     {"_viewmaster_test_backends", (DL_FUNC) &_viewmaster_test_backends, 0},
-    {"_viewmaster_af_nn", (DL_FUNC) &_viewmaster_af_nn, 14},
+    {"_viewmaster_af_nn", (DL_FUNC) &_viewmaster_af_nn, 15},
     {"_viewmaster_ann_demo", (DL_FUNC) &_viewmaster_ann_demo, 5},
     {"_viewmaster_perceptron", (DL_FUNC) &_viewmaster_perceptron, 8},
     {"_viewmaster_perceptron_demo", (DL_FUNC) &_viewmaster_perceptron_demo, 3},
