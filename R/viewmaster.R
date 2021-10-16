@@ -15,8 +15,14 @@ viewmaster <-function(query_cds,
                         selected_genes=NULL,
                       train_frac = 0.8,
                       tf_idf=F,
+                      hidden_layers = c(500,100),
+                      learning_rate = 2.0,
+                      batch_size = 100,
+                      max_epochs = 250,
+                      max_error = 0.5,
                       LSImethod=1,
                       verbose = T){
+  layers=F
   FUNC=match.arg(FUNC)
   common_list<-viewmaster::common_features(list(ref_cds, query_cds))
 
@@ -67,6 +73,7 @@ viewmaster <-function(query_cds,
           output = "labels"},
         neural_network={FUNC = af_nn
           funclabel="nn_"
+          layers=T
           output = "probs"},
         softmax_regression={FUNC = smr
           funclabel="smr_"
@@ -98,8 +105,16 @@ viewmaster <-function(query_cds,
                laboh[train_idx,], 
                laboh[test_idx,], 
                length(labels), 
-               query, 
+               query,
+               learning_rate = as.double(learning.rate),
                verbose = verbose)
+    if(FUNC=="neural_network"){
+      args$learning_rate=learning_rate
+      args$layers = c(as.integer(dim(data[,train_idx])[1]), sapply(hidden_layers, as.integer), as.integer(length(labels)))
+      args$max_epochs = as.integer(max-epochs)
+      args$batch_size = as.integer(batch_size)
+      args$max_error = as.integer(batch_size)
+    }
     out<-do.call(FUNC, args)
     colnames(out)<-labels
     colData(query_cds)[[coldata_label]]<-colnames(as.data.frame(out))[apply(as.data.frame(out),1,which.max)]

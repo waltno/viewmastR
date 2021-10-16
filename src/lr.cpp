@@ -173,6 +173,7 @@ af::array lr(RcppArrayFire::typed_array<f32> train_feats,
                  RcppArrayFire::typed_array<s32> test_targets,
                  int num_classes,
                  RcppArrayFire::typed_array<f32> query,
+                 float learning_rate = 2.0,
                  bool verbose = false,
                  bool benchmark = false,
                  int device = 0) {
@@ -208,7 +209,7 @@ af::array lr(RcppArrayFire::typed_array<f32> train_feats,
   // Train logistic regression parameters
   array Weights =
     train(train_feats, train_targets,
-          0.1,    // learning rate (aka alpha)
+          learning_rate,    // learning rate (aka alpha)
           1.0,    // regularization constant (aka weight decay, aka lamdba)
           0.01,   // maximum error
           1000,   // maximum iterations

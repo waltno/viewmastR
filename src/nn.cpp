@@ -292,6 +292,7 @@ af::array af_nn(RcppArrayFire::typed_array<f32> train_feats,
                  RcppArrayFire::typed_array<s32> train_target,
                  RcppArrayFire::typed_array<s32> test_target,
                  int num_classes,
+                 std::vector<int> layers,
                  RcppArrayFire::typed_array<f32> query_feats,
                  int device = 0,
                  std::string dts = "f32",
@@ -344,14 +345,26 @@ af::array af_nn(RcppArrayFire::typed_array<f32> train_feats,
     std::cerr << query_feats.dims() << std::endl;
     std::cerr << "Num classes:" << std::endl;
     std::cerr << num_classes << std::endl;
+    // Network parameters
+    // vector<int> layers;
+    // layers.push_back(train_feats.dims(1));
+    // layers.push_back(100);
+    // layers.push_back(50);
+    // layers.push_back(num_classes);
+    // Create network: architecture, range, datatype
+    std::cerr << "Creating network with the following layers:" << std::endl;
+    for (auto i: layers)
+      std::cerr << i << ' ';
+    std::endl;
+    std::cerr << "Learning Rate:" << std::endl;
+    std::cerr << learning_rate << std::endl;
+    std::cerr << "Max epochs:" << std::endl;
+    std::cerr << max_epochs << std::endl;
+    std::cerr << "Batch size:" << std::endl;
+    std::cerr << batch_size << std::endl;
+    std::cerr << "Max error:" << std::endl;
+    std::cerr << max_error << std::endl;
   }
-  // Network parameters
-  vector<int> layers;
-  layers.push_back(train_feats.dims(1));
-  layers.push_back(100);
-  layers.push_back(50);
-  layers.push_back(num_classes);
-  // Create network: architecture, range, datatype
   ann network(layers, 0.05, dt, verbose);
   // Train network
   timer::start();
@@ -385,6 +398,7 @@ af::array af_nn(RcppArrayFire::typed_array<f32> train_feats,
       fprintf(stderr,"Prediction time: %4.4lf s\n\n", test_time);
     }
   }
+  deviceGC();
   return query_output;
 }
 
