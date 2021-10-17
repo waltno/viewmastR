@@ -122,6 +122,12 @@ vector<array> ann::forward_propagate(const array &input) {
     array in      = add_bias(signal[i]);
     array out     = matmul(in, weights[i]);
     signal[i + 1] = sigmoid(out);
+    // if(i == num_layers - 1){
+    //   signal[i + 1] = sigmoid(out);
+    // } else{
+    //   signal[i + 1] = relu(out);
+    // }
+    // 
   }
   return signal;
 }
@@ -355,7 +361,7 @@ af::array af_nn(RcppArrayFire::typed_array<f32> train_feats,
     std::cerr << "Creating network with the following layers:" << std::endl;
     for (auto i: layers)
       std::cerr << i << ' ';
-    std::endl;
+    std::cerr << std::endl;
     std::cerr << "Learning Rate:" << std::endl;
     std::cerr << learning_rate << std::endl;
     std::cerr << "Max epochs:" << std::endl;

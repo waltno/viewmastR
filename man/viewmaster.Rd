@@ -14,6 +14,13 @@ viewmaster(
     "logistic_regression", "deep_belief_nn", "perceptron"),
   selected_genes = NULL,
   train_frac = 0.8,
+  tf_idf = F,
+  hidden_layers = c(500, 100),
+  learning_rate = 2,
+  batch_size = 100,
+  max_epochs = 250,
+  max_error = 0.5,
+  LSImethod = 1,
   verbose = T
 )
 }
