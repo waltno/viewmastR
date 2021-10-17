@@ -80,3 +80,8 @@ computeSparseRowVariances <- function(j, val, rm, n) {
     .Call('_viewmaster_computeSparseRowVariances', PACKAGE = 'viewmaster', j, val, rm, n)
 }
 
+#' @export
+get_mnist <- function(perc = 80L, verbose = TRUE) {
+    .Call('_viewmaster_get_mnist', PACKAGE = 'viewmaster', perc, verbose)
+}
+

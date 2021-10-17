@@ -18,6 +18,7 @@ data$train$x<-data$train$x/255
 data$train$y<-model.matrix(~0+factor(data$train$y))
 colnames(data$train$y)<-0:9
 dim(data$test$x)<-c(10000, 28*28)
+<<<<<<< HEAD
 data$train$y<-data$train$y/255
 data$test$y<-model.matrix(~0+factor(data$test$y))
 colnames(data$test$y)<-0:9
@@ -56,6 +57,29 @@ out<-af_nn(t(data$train$x)[,1:10000],
 t(data$train$x)[,1]
 
 ann_demo()
+data$test$y<-data$test$y/255
+data$test$y<-model.matrix(~0+factor(data$test$y))
+colnames(data$test$y)<-0:9
+out<-af_nn(t(data$train$x)[,1:10000], 
+           t(data$test$x)[,1:2000], 
+           data$train$y[1:10000,], 
+           data$test$y[1:2000,],
+           max_error = 0.5,
+           learning_rate = 1.5, 
+           num_classes = 10, 
+           query = t(data$test$x),
+           layers = c(784, 100, 50, 10),  
+           verbose = T)
+
+viewmaster::ann_demo()
+
+mnl<-viewmaster::get_mnist()
+mnl[[3]]
+dim(mnl[[1]])
+
+mnl[[1]][1:784,1]
+
+dat <- data.table::fread("/Users/sfurlan/develop/viewmaster/src/examples/data/mnist/images-subset")
 
 ## arrayfire testing
 library(viewmaster)

@@ -6,6 +6,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // bagging_demo
 void bagging_demo(int perc, bool verbose);
 RcppExport SEXP _viewmaster_bagging_demo(SEXP percSEXP, SEXP verboseSEXP) {
@@ -262,6 +267,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// get_mnist
+Rcpp::List get_mnist(int perc, bool verbose);
+RcppExport SEXP _viewmaster_get_mnist(SEXP percSEXP, SEXP verboseSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type perc(percSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_mnist(perc, verbose));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_viewmaster_bagging_demo", (DL_FUNC) &_viewmaster_bagging_demo, 2},
@@ -280,6 +297,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_viewmaster_smr", (DL_FUNC) &_viewmaster_smr, 9},
     {"_viewmaster_smr_demo", (DL_FUNC) &_viewmaster_smr_demo, 2},
     {"_viewmaster_computeSparseRowVariances", (DL_FUNC) &_viewmaster_computeSparseRowVariances, 4},
+    {"_viewmaster_get_mnist", (DL_FUNC) &_viewmaster_get_mnist, 2},
     {NULL, NULL, 0}
 };
 
