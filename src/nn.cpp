@@ -97,37 +97,38 @@ private:
   dtype datatype;
   // Add bias input to the output from previous layer
   array add_bias(const array &in);
-  vector<array> forward_propagate(const array &input);
+  vector<array> forward_propagate(const array &input, bool relu_activation);
   void back_propagate(const vector<array> signal, const array &pred,
                       const double &alpha);
 public:
   // Create a network with given parameters
-  ann(vector<int> layers, double range, dtype dt = f32, bool verbose = false);
+  ann(vector<int> layers, double range, dtype dt = f32, bool verbose = false, bool relu_activation = false);
   // Output after single pass of forward propagation
-  array predict(const array &input);
+  array predict(const array &input, bool relu_activation);
+  array relu (const array &input);
   // Method to train the neural net
   double train(const array &input, const array &target, double alpha = 1.0,
                int max_epochs = 300, int batch_size = 100,
-               double maxerr = 1.0, bool verbose = false);
+               double maxerr = 1.0, bool verbose = false, bool relu_activation = false);
 };
 array ann::add_bias(const array &in) {
   // Bias input is added on top of given input
   return join(1, constant(1, in.dims(0), 1, datatype), in);
 }
-vector<array> ann::forward_propagate(const array &input) {
+vector<array> ann::forward_propagate(const array &input, bool relu_activation = false) {
   // Get activations at each layer
   vector<array> signal(num_layers);
   signal[0] = input;
   for (int i = 0; i < num_layers - 1; i++) {
     array in      = add_bias(signal[i]);
     array out     = matmul(in, weights[i]);
-    signal[i + 1] = sigmoid(out);
-    // if(i == num_layers - 1){
-    //   signal[i + 1] = sigmoid(out);
-    // } else{
-    //   signal[i + 1] = relu(out);
-    // }
-    // 
+    // signal[i + 1] = sigmoid(out);
+    if(i < num_layers - 1 && relu_activation){
+      signal[i + 1] = relu(out);
+    } else{
+      signal[i + 1] = sigmoid(out);
+    }
+
   }
   return signal;
 }
@@ -153,7 +154,7 @@ void ann::back_propagate(const vector<array> signal, const array &target,
   }
 }
 
-ann::ann(vector<int> layers, double range, dtype dt, bool verbose)
+ann::ann(vector<int> layers, double range, dtype dt, bool verbose, bool relu_activation)
   : num_layers(layers.size()), weights(layers.size() - 1), datatype(dt) {
   if(verbose){
     std::cerr
@@ -167,14 +168,19 @@ ann::ann(vector<int> layers, double range, dtype dt, bool verbose)
   }
 }
 
-array ann::predict(const array &input) {
-  vector<array> signal = forward_propagate(input);
+
+array ann::relu(const array &input) {
+  return( max(input, 0.0) );
+}
+
+array ann::predict(const array &input, bool relu_activation) {
+  vector<array> signal = forward_propagate(input, relu_activation);
   array out            = signal[num_layers - 1];
   return out;
 }
 
 double ann::train(const array &input, const array &target, double alpha,
-                  int max_epochs, int batch_size, double maxerr, bool verbose) {
+                  int max_epochs, int batch_size, double maxerr, bool verbose, bool relu_activation) {
   const int num_samples = input.dims(0);
   const int num_batches = num_samples / batch_size;
   double err = 0;
@@ -186,7 +192,7 @@ double ann::train(const array &input, const array &target, double alpha,
       array x = input(seq(st, en), span);
       array y = target(seq(st, en), span);
       // Propagate the inputs forward
-      vector<array> signals = forward_propagate(x);
+      vector<array> signals = forward_propagate(x, relu_activation);
       array out             = signals[num_layers - 1];
       // Propagate the error backward
       back_propagate(signals, y, alpha);
@@ -194,7 +200,7 @@ double ann::train(const array &input, const array &target, double alpha,
     // Validate with last batch
     int st    = (num_batches - 1) * batch_size;
     int en    = num_samples - 1;
-    array out = predict(input(seq(st, en), span));
+    array out = predict(input(seq(st, en), span), relu_activation);
     err       = error(out, target(seq(st, en), span));
     // Check if convergence criteria has been met
     if (err < maxerr) {
@@ -210,7 +216,7 @@ double ann::train(const array &input, const array &target, double alpha,
 }
 
 
-static int ann_demo_run(int perc, const dtype dt, bool verbose = false, bool benchmark = false) {
+static int ann_demo_run(int perc, const dtype dt, bool verbose = false, bool benchmark = false, bool relu_activation = false) {
   fprintf(stderr,"** ArrayFire ANN Demo **\n");
   array train_images, test_images;
   array train_target, test_target;
@@ -257,18 +263,19 @@ static int ann_demo_run(int perc, const dtype dt, bool verbose = false, bool ben
                 250,    // max epochs
                 100,    // batch size
                 0.5,    // max error
-                true);  // verbose
+                true,   // verbose
+                relu_activation);
   af::sync();
   double train_time = timer::stop();
   // Run the trained network and test accuracy.
-  array train_output = network.predict(train_feats);
-  array test_output  = network.predict(test_feats);
+  array train_output = network.predict(train_feats, relu_activation);
+  array test_output  = network.predict(test_feats, relu_activation);
   // Benchmark prediction
   double test_time = 0.0;
   if(benchmark){
     af::sync();
     timer::start();
-    for (int i = 0; i < 100; i++) { network.predict(test_feats); }
+    for (int i = 0; i < 100; i++) { network.predict(test_feats, relu_activation); }
     af::sync();
     double test_time = timer::stop() / 100;
   }
@@ -300,6 +307,7 @@ af::array af_nn(RcppArrayFire::typed_array<f32> train_feats,
                  int num_classes,
                  std::vector<int> layers,
                  RcppArrayFire::typed_array<f32> query_feats,
+                 bool relu_activation = false,
                  int device = 0,
                  std::string dts = "f32",
                  float learning_rate = 2.0,    // learning rate / alpha
@@ -379,17 +387,17 @@ af::array af_nn(RcppArrayFire::typed_array<f32> train_feats,
   af::sync();
   double train_time = timer::stop();
   // Run the trained network and test accuracy.
-  array train_output = network.predict(train_feats);
-  array test_output  = network.predict(test_feats);
+  array train_output = network.predict(train_feats, relu_activation);
+  array test_output  = network.predict(test_feats, relu_activation);
   // array query_output  = network.predict(query_feats);
   // Benchmark prediction
   af::sync();
-  array query_output  = network.predict(query_feats);
+  array query_output  = network.predict(query_feats, relu_activation);
   double test_time = 0.0;
   if(verbose) {
     if(benchmark){
       timer::start();
-      for (int i = 0; i < 100; i++) { network.predict(test_feats); }
+      for (int i = 0; i < 100; i++) { network.predict(test_feats, relu_activation); }
       af::sync();
       double test_time = timer::stop() / 100;
     }

@@ -10,7 +10,7 @@ setwd("~/develop/viewmaster")
 
 roxygen2::roxygenize(".")
 
-#mnist arrayfire
+#mnist arrayfire working well.
 library(viewmaster)
 data<-keras::dataset_mnist()
 dim(data$train$x)<-c(60000, 28*28)
@@ -18,52 +18,13 @@ data$train$x<-data$train$x/255
 data$train$y<-model.matrix(~0+factor(data$train$y))
 colnames(data$train$y)<-0:9
 dim(data$test$x)<-c(10000, 28*28)
-<<<<<<< HEAD
-data$train$y<-data$train$y/255
-data$test$y<-model.matrix(~0+factor(data$test$y))
-colnames(data$test$y)<-0:9
-out<-af_nn(t(data$train$x)[,1:10000], 
-           t(data$test$x), 
-           data$train$y[1:10000,], 
-           data$test$y,
-           max_error = 0.01,
-           learning_rate = 0.01, 
-           num_classes = 10, 
-           query = t(data$test$x),
-           layers = c(784, 500, 100, 10),  
-           verbose = T)
-
-
-data<-keras::dataset_mnist()
-dim(data$train$x)<-c(60000, 28*28)
-#data$train$x<-data$train$x/255
-data$train$y<-model.matrix(~0+factor(data$train$y))
-#colnames(data$train$y)<-0:9
-dim(data$test$x)<-c(10000, 28*28)
-#data$train$y<-data$train$y/255
-data$test$y<-model.matrix(~0+factor(data$test$y))
-colnames(data$test$y)<-0:9
-out<-af_nn(t(data$train$x)[,1:10000], 
-           t(data$test$x), 
-           data$train$y[1:10000,], 
-           data$test$y,
-           max_error = 0.5,
-           learning_rate = 2.0, 
-           num_classes = 10, 
-           query = t(data$test$x),
-           layers = c(784, 100, 50),  
-           verbose = T)
-
-t(data$train$x)[,1]
-
-ann_demo()
 data$test$y<-data$test$y/255
 data$test$y<-model.matrix(~0+factor(data$test$y))
 colnames(data$test$y)<-0:9
-out<-af_nn(t(data$train$x)[,1:10000], 
-           t(data$test$x)[,1:2000], 
-           data$train$y[1:10000,], 
-           data$test$y[1:2000,],
+out<-af_nn(t(data$train$x)[,1:5000], 
+           t(data$test$x)[,1:1000], 
+           data$train$y[1:5000,], 
+           data$test$y[1:1000,],
            max_error = 0.5,
            learning_rate = 1.5, 
            num_classes = 10, 
@@ -71,15 +32,56 @@ out<-af_nn(t(data$train$x)[,1:10000],
            layers = c(784, 100, 50, 10),  
            verbose = T)
 
-viewmaster::ann_demo()
+
+#build relu function
+sigmoid<-function(x){
+  return(1/(1+exp(-x)))
+  }
+#test sigmoid
+data<-keras::dataset_mnist()
+dim(data$train$x)<-c(60000, 28*28)
+d<-data$train$x[1,]
+all.equal(get_sigmoid(d),sigmoid(d))
+
+relu<-function(input){
+  input[input<0]<-0
+  input
+}
+r<-rnorm(784)
+all.equal(relu(r), get_relu(r))
+#test relu
+library(viewmaster)
+data<-keras::dataset_mnist()
+dim(data$train$x)<-c(60000, 28*28)
+data$train$x<-data$train$x/255
+data$train$y<-model.matrix(~0+factor(data$train$y))
+colnames(data$train$y)<-0:9
+dim(data$test$x)<-c(10000, 28*28)
+data$test$y<-data$test$y/255
+data$test$y<-model.matrix(~0+factor(data$test$y))
+colnames(data$test$y)<-0:9
+out<-af_nn(t(data$train$x)[,1:3000], 
+           t(data$test$x)[,1:300], 
+           data$train$y[1:3000,], 
+           data$test$y[1:300,],
+           relu_activation = T,
+           max_error = 0.5,
+           learning_rate =1, 
+           num_classes = 10, 
+           query = t(data$test$x),
+           layers = c(784, 100, 50, 10),  
+           verbose = T)
+
+
+
+
+ann_demo()
 
 mnl<-viewmaster::get_mnist()
 mnl[[3]]
 dim(mnl[[1]])
 
 mnl[[1]][1:784,1]
-
-dat <- data.table::fread("/Users/sfurlan/develop/viewmaster/src/examples/data/mnist/images-subset")
 
 ## arrayfire testing
 library(viewmaster)
@@ -113,13 +115,17 @@ num_classes
 dim(train_targets)
 dim(test_targets)
 
-af_nn(train_feats, test_feats, train_targets, test_targets, num_classes, query = test_feats, verbose = F)
-naive_bayes(train_feats, test_feats, train_labels, test_labels, num_classes, query = test_feats, verbose = F)
-bagging(train_feats, test_feats, train_labels, test_labels, num_classes, query = test_feats, verbose = F)
-smr(train_feats, test_feats, train_targets, test_targets, num_classes, query = test_feats, verbose = F)
-af_dbn(train_feats, test_feats, train_targets, test_targets, num_classes, query = test_feats, verbose = F)
-lr(train_feats, test_feats, train_targets, test_targets, num_classes, query = test_feats, verbose = F)
-perceptron(train_feats, test_feats, train_targets, test_targets, num_classes, query = test_feats, verbose = F)
+out<-af_nn(train_feats, test_feats, train_targets, test_targets, num_classes, layers = c(4,4,3), query = test_feats, learning_rate =0.01, verbose = T)
+
+
+
+af_nn(train_feats, test_feats, train_targets, test_targets, num_classes, query = test_feats, verbose = T)
+naive_bayes(train_feats, test_feats, train_labels, test_labels, num_classes, query = test_feats, verbose = T)
+bagging(train_feats, test_feats, train_labels, test_labels, num_classes, query = test_feats, verbose = T)
+smr(train_feats, test_feats, train_targets, test_targets, num_classes, query = test_feats, verbose = T)
+af_dbn(train_feats, test_feats, train_targets, test_targets, num_classes, query = test_feats, verbose = T)
+lr(train_feats, test_feats, train_targets, test_targets, num_classes, query = test_feats, verbose = T)
+perceptron(train_feats, test_feats, train_targets, test_targets, num_classes, query = test_feats, verbose = T)
 
 
 test_backends()

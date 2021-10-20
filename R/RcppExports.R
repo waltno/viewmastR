@@ -47,8 +47,8 @@ test_backends <- function() {
 }
 
 #' @export
-af_nn <- function(train_feats, test_feats, train_target, test_target, num_classes, layers, query_feats, device = 0L, dts = "f32", learning_rate = 2.0, max_epochs = 250L, batch_size = 100L, max_error = 0.5, verbose = TRUE, benchmark = FALSE) {
-    .Call('_viewmaster_af_nn', PACKAGE = 'viewmaster', train_feats, test_feats, train_target, test_target, num_classes, layers, query_feats, device, dts, learning_rate, max_epochs, batch_size, max_error, verbose, benchmark)
+af_nn <- function(train_feats, test_feats, train_target, test_target, num_classes, layers, query_feats, relu_activation = FALSE, device = 0L, dts = "f32", learning_rate = 2.0, max_epochs = 250L, batch_size = 100L, max_error = 0.5, verbose = TRUE, benchmark = FALSE) {
+    .Call('_viewmaster_af_nn', PACKAGE = 'viewmaster', train_feats, test_feats, train_target, test_target, num_classes, layers, query_feats, relu_activation, device, dts, learning_rate, max_epochs, batch_size, max_error, verbose, benchmark)
 }
 
 #' @export
@@ -78,6 +78,16 @@ smr_demo <- function(perc = 80L, verbose = TRUE) {
 
 computeSparseRowVariances <- function(j, val, rm, n) {
     .Call('_viewmaster_computeSparseRowVariances', PACKAGE = 'viewmaster', j, val, rm, n)
+}
+
+#' @export
+get_sigmoid <- function(input) {
+    .Call('_viewmaster_get_sigmoid', PACKAGE = 'viewmaster', input)
+}
+
+#' @export
+get_relu <- function(input) {
+    .Call('_viewmaster_get_relu', PACKAGE = 'viewmaster', input)
 }
 
 #' @export

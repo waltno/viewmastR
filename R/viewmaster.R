@@ -106,7 +106,7 @@ viewmaster <-function(query_cds,
                laboh[test_idx,], 
                length(labels), 
                query,
-               learning_rate = as.double(learning.rate),
+               learning_rate = as.double(learning_rate),
                verbose = verbose)
     if(FUNC=="neural_network"){
       args$learning_rate=learning_rate

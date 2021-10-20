@@ -58,6 +58,19 @@ Rcpp::List return_mnist(int perc, bool verbose = false) {
 
 //' @export
 // [[Rcpp::export]]
+af::array get_sigmoid(RcppArrayFire::typed_array<f32> input){
+  return (sigmoid (input));
+}
+
+//' @export
+// [[Rcpp::export]]
+af::array get_relu(RcppArrayFire::typed_array<f32> input){
+  return( max(input, 0.0) );
+}
+
+
+//' @export
+// [[Rcpp::export]]
 Rcpp::List get_mnist(int perc = 80, bool verbose = true) {
   // int device   = argc > 1 ? atoi(argv[1]) : 0;
   // bool console = argc > 2 ? argv[2][0] == '-' : false;

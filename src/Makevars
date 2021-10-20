@@ -1,5 +1,5 @@
 AF_CXXFLAGS = -I/opt/arrayfire/include
-AF_LIBS   = -L/opt/arrayfire/lib -laf -Wl,-rpath,/opt/arrayfire/lib /Library/Frameworks/R.framework/Versions/4.1/Resources/library/RcppArrayFire/libs/RcppArrayFire.so -Wl,-rpath,/Library/Frameworks/R.framework/Versions/4.1/Resources/library/RcppArrayFire/libs
+AF_LIBS   = -L/opt/arrayfire/lib -laf -Wl,-rpath,/opt/arrayfire/lib /Library/Frameworks/R.framework/Versions/4.0/Resources/library/RcppArrayFire/libs/RcppArrayFire.so -Wl,-rpath,/Library/Frameworks/R.framework/Versions/4.0/Resources/library/RcppArrayFire/libs
 
 ## With R 3.1.0 or later, you can uncomment the following line to tell R to 
 ## enable compilation with C++11 (where available)

@@ -6,11 +6,6 @@
 
 using namespace Rcpp;
 
-#ifdef RCPP_USE_GLOBAL_ROSTREAM
-Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
-Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
-#endif
-
 // bagging_demo
 void bagging_demo(int perc, bool verbose);
 RcppExport SEXP _viewmaster_bagging_demo(SEXP percSEXP, SEXP verboseSEXP) {
@@ -154,8 +149,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // af_nn
-af::array af_nn(RcppArrayFire::typed_array<f32> train_feats, RcppArrayFire::typed_array<f32> test_feats, RcppArrayFire::typed_array<s32> train_target, RcppArrayFire::typed_array<s32> test_target, int num_classes, std::vector<int> layers, RcppArrayFire::typed_array<f32> query_feats, int device, std::string dts, float learning_rate, int max_epochs, int batch_size, float max_error, bool verbose, bool benchmark);
-RcppExport SEXP _viewmaster_af_nn(SEXP train_featsSEXP, SEXP test_featsSEXP, SEXP train_targetSEXP, SEXP test_targetSEXP, SEXP num_classesSEXP, SEXP layersSEXP, SEXP query_featsSEXP, SEXP deviceSEXP, SEXP dtsSEXP, SEXP learning_rateSEXP, SEXP max_epochsSEXP, SEXP batch_sizeSEXP, SEXP max_errorSEXP, SEXP verboseSEXP, SEXP benchmarkSEXP) {
+af::array af_nn(RcppArrayFire::typed_array<f32> train_feats, RcppArrayFire::typed_array<f32> test_feats, RcppArrayFire::typed_array<s32> train_target, RcppArrayFire::typed_array<s32> test_target, int num_classes, std::vector<int> layers, RcppArrayFire::typed_array<f32> query_feats, bool relu_activation, int device, std::string dts, float learning_rate, int max_epochs, int batch_size, float max_error, bool verbose, bool benchmark);
+RcppExport SEXP _viewmaster_af_nn(SEXP train_featsSEXP, SEXP test_featsSEXP, SEXP train_targetSEXP, SEXP test_targetSEXP, SEXP num_classesSEXP, SEXP layersSEXP, SEXP query_featsSEXP, SEXP relu_activationSEXP, SEXP deviceSEXP, SEXP dtsSEXP, SEXP learning_rateSEXP, SEXP max_epochsSEXP, SEXP batch_sizeSEXP, SEXP max_errorSEXP, SEXP verboseSEXP, SEXP benchmarkSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -166,6 +161,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type num_classes(num_classesSEXP);
     Rcpp::traits::input_parameter< std::vector<int> >::type layers(layersSEXP);
     Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32> >::type query_feats(query_featsSEXP);
+    Rcpp::traits::input_parameter< bool >::type relu_activation(relu_activationSEXP);
     Rcpp::traits::input_parameter< int >::type device(deviceSEXP);
     Rcpp::traits::input_parameter< std::string >::type dts(dtsSEXP);
     Rcpp::traits::input_parameter< float >::type learning_rate(learning_rateSEXP);
@@ -174,7 +170,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< float >::type max_error(max_errorSEXP);
     Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
     Rcpp::traits::input_parameter< bool >::type benchmark(benchmarkSEXP);
-    rcpp_result_gen = Rcpp::wrap(af_nn(train_feats, test_feats, train_target, test_target, num_classes, layers, query_feats, device, dts, learning_rate, max_epochs, batch_size, max_error, verbose, benchmark));
+    rcpp_result_gen = Rcpp::wrap(af_nn(train_feats, test_feats, train_target, test_target, num_classes, layers, query_feats, relu_activation, device, dts, learning_rate, max_epochs, batch_size, max_error, verbose, benchmark));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -267,6 +263,28 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// get_sigmoid
+af::array get_sigmoid(RcppArrayFire::typed_array<f32> input);
+RcppExport SEXP _viewmaster_get_sigmoid(SEXP inputSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32> >::type input(inputSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_sigmoid(input));
+    return rcpp_result_gen;
+END_RCPP
+}
+// get_relu
+af::array get_relu(RcppArrayFire::typed_array<f32> input);
+RcppExport SEXP _viewmaster_get_relu(SEXP inputSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32> >::type input(inputSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_relu(input));
+    return rcpp_result_gen;
+END_RCPP
+}
 // get_mnist
 Rcpp::List get_mnist(int perc, bool verbose);
 RcppExport SEXP _viewmaster_get_mnist(SEXP percSEXP, SEXP verboseSEXP) {
@@ -290,13 +308,15 @@ static const R_CallMethodDef CallEntries[] = {
     {"_viewmaster_naive_bayes", (DL_FUNC) &_viewmaster_naive_bayes, 9},
     {"_viewmaster_naive_bayes_demo", (DL_FUNC) &_viewmaster_naive_bayes_demo, 2},
     {"_viewmaster_test_backends", (DL_FUNC) &_viewmaster_test_backends, 0},
-    {"_viewmaster_af_nn", (DL_FUNC) &_viewmaster_af_nn, 15},
+    {"_viewmaster_af_nn", (DL_FUNC) &_viewmaster_af_nn, 16},
     {"_viewmaster_ann_demo", (DL_FUNC) &_viewmaster_ann_demo, 5},
     {"_viewmaster_perceptron", (DL_FUNC) &_viewmaster_perceptron, 8},
     {"_viewmaster_perceptron_demo", (DL_FUNC) &_viewmaster_perceptron_demo, 3},
     {"_viewmaster_smr", (DL_FUNC) &_viewmaster_smr, 9},
     {"_viewmaster_smr_demo", (DL_FUNC) &_viewmaster_smr_demo, 2},
     {"_viewmaster_computeSparseRowVariances", (DL_FUNC) &_viewmaster_computeSparseRowVariances, 4},
+    {"_viewmaster_get_sigmoid", (DL_FUNC) &_viewmaster_get_sigmoid, 1},
+    {"_viewmaster_get_relu", (DL_FUNC) &_viewmaster_get_relu, 1},
     {"_viewmaster_get_mnist", (DL_FUNC) &_viewmaster_get_mnist, 2},
     {NULL, NULL, 0}
 };
