@@ -13,6 +13,6 @@ Imports: Rcpp (>= 1.0.6),
   ggplot2 (>= 3.0.0),
   magrittr (> 1.0.0)
 LinkingTo: Rcpp, RcppArrayFire
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 SystemRequirements: C++11
 Encoding: UTF-8

@@ -108,12 +108,12 @@ viewmaster <-function(query_cds,
                query,
                learning_rate = as.double(learning_rate),
                verbose = verbose)
-    if(FUNC=="neural_network"){
+    if(funclabel=="nn_"){
       args$learning_rate=learning_rate
       args$layers = c(as.integer(dim(data[,train_idx])[1]), sapply(hidden_layers, as.integer), as.integer(length(labels)))
-      args$max_epochs = as.integer(max-epochs)
+      args$max_epochs = as.integer(max_epochs)
       args$batch_size = as.integer(batch_size)
-      args$max_error = as.integer(batch_size)
+      args$max_error = as.integer(max_error)
     }
     out<-do.call(FUNC, args)
     colnames(out)<-labels
