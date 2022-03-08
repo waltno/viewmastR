@@ -179,6 +179,11 @@ af::array smr(RcppArrayFire::typed_array<f32> train_feats,
                  RcppArrayFire::typed_array<s32> test_targets,
                  int num_classes,
                  RcppArrayFire::typed_array<f32> query,
+                 float lambda = 1.0,
+                 float learning_rate = 2.0,    // learning rate / alpha
+                 int iterations = 1000,    //iterations
+                 int batch_size = 100,    // batch size
+                 float max_error = 0.5,    // max error
                  bool verbose = false,
                  bool benchmark = false,
                  int device = 0) {
@@ -214,10 +219,10 @@ af::array smr(RcppArrayFire::typed_array<f32> train_feats,
   // Train logistic regression parameters
   array Weights =
     train(train_feats, train_targets,
-          0.1,    // learning rate (aka alpha)
-          1.0,    // regularization constant (aka weight decay, aka lamdba)
-          0.01,   // maximum error
-          1000,   // maximum iterations
+          learning_rate,    // learning rate (aka alpha)
+          lambda,    // regularization constant (aka weight decay, aka lamdba)
+          max_error,   // maximum error
+          iterations,   // maximum iterations
           verbose);  // verbose
   // Predict the results
   array train_outputs = predict(train_feats, Weights);

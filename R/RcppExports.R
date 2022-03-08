@@ -67,8 +67,8 @@ perceptron_demo <- function(device = 0L, perc = 80L, verbose = TRUE) {
 }
 
 #' @export
-smr <- function(train_feats, test_feats, train_targets, test_targets, num_classes, query, verbose = FALSE, benchmark = FALSE, device = 0L) {
-    .Call('_viewmaster_smr', PACKAGE = 'viewmaster', train_feats, test_feats, train_targets, test_targets, num_classes, query, verbose, benchmark, device)
+smr <- function(train_feats, test_feats, train_targets, test_targets, num_classes, query, lambda = 1.0, learning_rate = 2.0, iterations = 1000L, batch_size = 100L, max_error = 0.5, verbose = FALSE, benchmark = FALSE, device = 0L) {
+    .Call('_viewmaster_smr', PACKAGE = 'viewmaster', train_feats, test_feats, train_targets, test_targets, num_classes, query, lambda, learning_rate, iterations, batch_size, max_error, verbose, benchmark, device)
 }
 
 #' @export

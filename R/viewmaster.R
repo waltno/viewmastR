@@ -20,6 +20,8 @@ viewmaster <-function(query_cds,
                       batch_size = 100,
                       max_epochs = 250,
                       max_error = 0.5,
+                      lambda = 1.0,
+                      iterations = 1000,
                       LSImethod=1,
                       verbose = T){
   layers=F
@@ -108,6 +110,12 @@ viewmaster <-function(query_cds,
                query,
                learning_rate = as.double(learning_rate),
                verbose = verbose)
+    if(funclabel=="smr_"){
+      args$learning_rate=learning_rate
+      args$iterations = as.integer(iterations)
+      args$lambda = as.integer(lambda)
+      args$max_error = as.integer(max_error)
+    }
     if(funclabel=="nn_"){
       args$learning_rate=learning_rate
       args$layers = c(as.integer(dim(data[,train_idx])[1]), sapply(hidden_layers, as.integer), as.integer(length(labels)))
