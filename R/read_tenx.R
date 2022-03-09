@@ -58,7 +58,7 @@ read_cds_starsolo_file = function(folder) {
   ofiles<-c("genes.tsv", "barcodes.tsv", "matrix.mtx")
   zfiles<-paste0(files, ".gz")
   zofiles<-paste0(ofiles, ".gz")
-  possibilities<-list("files"=files, "ofiles"=ofiles, "zfiles"=ofiles, "zofiles"=zofiles)
+  possibilities<-list("files"=files, "ofiles"=ofiles, "zfiles"=zfiles, "zofiles"=zofiles)
   found<-lapply(possibilities, function(l){
     found <- sapply(l, function(file) file.exists(file.path(folder, file)))
     allfound <- all(found)
@@ -105,13 +105,13 @@ read_cds_starsolo_file = function(folder) {
 files3_prep<-function(folder){
   #This function attempts to identify the correct path for cellranger output using the files3 
   #check for outs
-  uzfiles_to_check<-c("matrix.mtx", "genes.tsv", "barcodes.tsv")
-  zfiles_to_check<-c("matrix.mtx.gz", "genes.tsv.gz", "barcodes.tsv.gz")
+  uzfiles_to_check<-c("matrix.mtx", "genes.tsv", "features.tsv", "barcodes.tsv")
+  zfiles_to_check<-c("matrix.mtx.gz", "genes.tsv.gz","features.tsv.gz",  "barcodes.tsv.gz")
   outs_present<-file.exists(file.path(folder, "outs"))
   if(!outs_present){
     uz_found<-sapply(uzfiles_to_check, function(file) file.exists(file.path(folder, file)))
     z_found<-sapply(zfiles_to_check, function(file) file.exists(file.path(folder, file)))
-    if(all(uz_found) | all(z_found)){
+    if(length(which(as.logical(uz_found))>2) | length(which(as.logical(z_found))>2)){
       return(file.path(folder))
     }
     uz_found<-sapply(uzfiles_to_check, function(file) file.exists(file.path(folder, "filtered_feature_bc_matrix", file)))
@@ -128,7 +128,7 @@ files3_prep<-function(folder){
   if(outs_present){
     uz_found<-sapply(uzfiles_to_check, function(file) file.exists(file.path(folder, "outs", file)))
     z_found<-sapply(zfiles_to_check, function(file) file.exists(file.path(folder, "outs", file)))
-    if(all(uz_found) | all(z_found)){
+    if(length(which(as.logical(uz_found))>2) | length(which(as.logical(uz_found))>2)){
       return(file.path(folder, "outs"))
     }
   }
