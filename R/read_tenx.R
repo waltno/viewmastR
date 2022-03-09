@@ -322,7 +322,7 @@ load_cellranger_data<-function( folders=NULL,
       unfilt_folders<-files
     }else{
       if(data_type=="h5"){
-        unfilt_folders<-file.path(folders, "outs", "unfiltered_feature_bc_matrix.h5")
+        unfilt_folders<-file.path(folders, "outs", "raw_feature_bc_matrix.h5")
       }else{
         #deal with case where data is in "outs" or isn't
         unfilt_folders<-sapply(folders, files3_prep)
