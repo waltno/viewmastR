@@ -70,7 +70,11 @@ read_cds_starsolo_file = function(folder) {
   barcodes = fread(file.path(folder, files[2]), header = F)$V1
   feats<- fread(file.path(folder, files[1]), header=F)
   gene_ids = feats$V1
-  gene_names = feats$V2
+  if(!is.null(feats$V2)){
+    gene_names = feats$V2
+  }else{
+    gene_names = feats$V1
+  }
   gbm = readMM(file.path(folder, files[3]))
   
   pData.df = data.frame(
