@@ -9,10 +9,11 @@ The inputs are cell_data_set objects (see http://github/trapnell-lab/monocle3)
 
 ## Easy Installation (Linux) (recommended) 
 
-Download singularity image (1.3gb) (singularity is similar to docker but safe for clusters)
-```
-singularity pull shub://wheaton5/souporcell
-```
+Download ArrayFire
+
+https://arrayfire.com/binaries/
+
+
 
 ## Example
 ```
