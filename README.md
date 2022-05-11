@@ -13,6 +13,18 @@ Download ArrayFire
 
 https://arrayfire.com/binaries/
 
+R
+```
+
+if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
+
+if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+
+
+devtools::install_github("daqana/rcpparrayfire")
+devtools::install_github("furlan_lab/viewmaster")
+
+```
 
 
 ## Example
