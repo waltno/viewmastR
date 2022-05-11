@@ -1,18 +1,29 @@
-# viewmaster
+# Viewmaster
 
-<img src="https://github.com/scfurl/viewmaster/blob/viewmaster.gif" width="100">
+<p align="center"><img src="blob/viewmaster.png" alt="" width="100"></a></p>
+<hr>
 
 
-viewmaster is a method for performing unsupervised classification of single cells across datasets written for use in the R environment.
+Viewmaster is a method for performing unsupervised classification of single cells across datasets written for use in the R environment.
 
 The inputs are cell_data_set objects (see http://github/trapnell-lab/monocle3)
 
-## Easy Installation (Linux) (recommended) 
+## Installation 
 
-Download ArrayFire
+1) Download ArrayFire: https://arrayfire.com/binaries/
 
-https://arrayfire.com/binaries/
+2) Install in R
+```
 
+if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
+
+if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+
+
+devtools::install_github("daqana/rcpparrayfire")
+devtools::install_github("furlan_lab/viewmaster")
+
+```
 
 
 ## Example
