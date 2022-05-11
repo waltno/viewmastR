@@ -1,4 +1,4 @@
-R_VERSION = `Rscript -e 'cat(gsub("(\\.\\d)?$", "", format(getRversion())))'`
+R_VERSION = `Rscript -e 'cat(toString(gsub("(\\\\\.\\\\\d)?$$", "", format(getRversion()))))'`
 AF_CXXFLAGS = -I/opt/arrayfire/include
 AF_LIBS   = -L/opt/arrayfire/lib -laf -Wl,-rpath,/opt/arrayfire/lib /Library/Frameworks/R.framework/Versions/$(R_VERSION)/Resources/library/RcppArrayFire/libs/RcppArrayFire.so -Wl,-rpath,/Library/Frameworks/R.framework/Versions/$(R_VERSION)/Resources/library/RcppArrayFire/libs
 
@@ -17,3 +17,4 @@ PKG_LIBS = $(AF_LIBS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
 
 PKG_CPPFLAGS = $(AF_CXXFLAGS) -I../inst/include
 # orig PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS) 
+
