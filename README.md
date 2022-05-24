@@ -1,6 +1,6 @@
 # Viewmaster
 
-<p align="center"><img src="blob/viewmaster.png" alt="" width="100"></a></p>
+<p align="center"><img src="blob/viewmaster2.png" alt="" width="100"></a></p>
 <hr>
 
 
