@@ -23,7 +23,8 @@ viewmaster <-function(query_cds,
                       lambda = 1.0,
                       iterations = 1000,
                       LSImethod=1,
-                      verbose = T){
+                      verbose = T,
+                      threshold = NULL){
   layers=F
   FUNC=match.arg(FUNC)
   common_list<-viewmaster::common_features(list(ref_cds, query_cds))
@@ -125,8 +126,24 @@ viewmaster <-function(query_cds,
     }
     out<-do.call(FUNC, args)
     colnames(out)<-labels
-    colData(query_cds)[[coldata_label]]<-colnames(as.data.frame(out))[apply(as.data.frame(out),1,which.max)]
-    return(query_cds)
+    if(is.null(threshold)){
+      colData(query_cds)[[coldata_label]]<-colnames(as.data.frame(out))[apply(as.data.frame(out),1,which.max)]
+      return(query_cds)
+    }else{
+      if(threshold > 1 & threshold <= 0)stop("thresh must be value between 0 and 1")
+      out[out<threshold]<-NA
+      outd<-apply(as.data.frame(out),1,which.max)
+      outv<-sapply(outd, function(out){
+        if(length(out)==0){
+          NA
+        }else{
+          names(out)
+        }
+      })
+      colData(query_cds)[[coldata_label]]<-outv
+      return(query_cds)
+    }
+    
   }
   if(output=="labels"){
     args<-list(data[,train_idx], 

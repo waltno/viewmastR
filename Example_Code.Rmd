@@ -32,7 +32,7 @@ suppressPackageStartupMessages({
 })
 
 Sys.setenv('R_MAX_VSIZE'=32000000000)
-Sys.getenv()
+#Sys.getenv()
 ```
 
 #load HCA bone marrow data set
