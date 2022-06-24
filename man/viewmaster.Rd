@@ -20,8 +20,11 @@ viewmaster(
   batch_size = 100,
   max_epochs = 250,
   max_error = 0.5,
+  lambda = 1,
+  iterations = 1000,
   LSImethod = 1,
-  verbose = T
+  verbose = T,
+  threshold = NULL
 )
 }
 \arguments{
