@@ -11,7 +11,9 @@ Imports: Rcpp (>= 1.0.6),
   monocle3 (>= 0.1.0),
   Matrix (>= 1.0),
   ggplot2 (>= 3.0.0),
-  magrittr (> 1.0.0)
+  magrittr (> 1.0.0),
+  Seurat (> 4.0.0),
+  biomaRt (> 2.50.0)
 LinkingTo: Rcpp, RcppArrayFire
 RoxygenNote: 7.2.0
 SystemRequirements: C++11
