@@ -365,17 +365,17 @@ load_training_data <-function(seurat){
 
 #' Single Cell Logistic Regression Matrix
 #'
-#' @param trainDat 
-#' @param testDat 
-#' @param trainClass 
-#' @param testClass 
-#' @param downsample 
+#' @param trainDat training seurat object, assumes the negative control is in it already
+#' @param testDat  testing seurat object
+#' @param trainClass metadata column to learn
+#' @param testClass metadata column to test
+#' @param downsample number of randomly downsampled cells per metadata column in trainDat
 #'
 #' @return
 #' @export
 #'
 
-log_reg_matrix<-function(trainDat, testDat, trainClass, testClass, downsample){
+log_reg_matrix<-function(trainDat, testDat, trainClass, testClass, downsample = 200){
   #prepare test data
   
   Idents(testDat)<-toString(testClass)

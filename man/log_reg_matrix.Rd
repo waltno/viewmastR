@@ -4,18 +4,18 @@
 \alias{log_reg_matrix}
 \title{Single Cell Logistic Regression Matrix}
 \usage{
-log_reg_matrix(trainDat, testDat, trainClass, testClass, downsample)
+log_reg_matrix(trainDat, testDat, trainClass, testClass, downsample = 200)
 }
 \arguments{
-\item{trainDat}{}
+\item{trainDat}{training seurat object, assumes the negative control is in it already}
 
-\item{testDat}{}
+\item{testDat}{testing seurat object}
 
-\item{trainClass}{}
+\item{trainClass}{metadata column to learn}
 
-\item{testClass}{}
+\item{testClass}{metadata column to test}
 
-\item{downsample}{}
+\item{downsample}{number of randomly, downsampled cells per metadata column in trainDat}
 }
 \value{
 
