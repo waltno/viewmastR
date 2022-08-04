@@ -358,11 +358,10 @@ load_training_data <-function(seurat){
   return(list(toc=ttoc,mDat=metadata))
 }
 
-#returns a single cell matrix of log reg results
-#assumes negative control cells is already in the training object!!
 #' Single Cell RNA Logistic Regression Matrix
 #' @description A more quantitative method to cpmpare two single cell rna datasets
 #' Most code was delibrately taken from here :) github.com/constantAmateur/scKidneyTumors
+#' returns a single cell matrix of log reg results, assumes negative control cells is already in the training object!!
 #' @param trainDat Seurat Object
 #' @param testDat Seurat Object
 #' @param trainDat metadata column name used for training
