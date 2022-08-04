@@ -349,3 +349,94 @@ franken_helper <- function(x, from_dataset="mmusculus_gene_ensembl", to_dataset=
   return(genesV2)
 }
 
+#' @import Seurat
+#' @export 
+#get RNA count matrix and metadata
+load_training_data = function(seurat){
+  metadata = seurat@meta.data
+  ttoc = seurat@assays$RNA@counts
+  return(list(toc=ttoc,mDat=metadata))
+}
+
+#returns a single cell matrix of log reg results
+#assumes negative control cells is already in the training object!!
+#' Single Cell RNA Logistic Regression Matrix
+#' @description A more quantitative method to cpmpare two single cell rna datasets
+#' Most code was delibrately taken from here :) github.com/constantAmateur/scKidneyTumors
+#' @param trainDat Seurat Object
+#' @param testDat Seurat Object
+#' @param trainDat metadata column name used for training
+#' @param testDat metadata column name used for testing
+#' @param downsample number of cells to randomly downsample in training dataset 
+#' @import Seurat
+#' @import monocle3
+#' @import Matrix
+#' @import glmnet
+#' @return matrix
+#' @export
+
+
+log_reg_matrix<-function(trainDat, testDat, trainClass, testClass, downsample){
+  #prepare test data
+  Idents(testDat)<-toString(testClass)
+  DefaultAssay(testDat)<-"RNA"
+  testDat = loadTrainingData(testDat)
+  
+  #prepare train data
+  #assumes control sample is already in object
+  Idents(trainDat)<-toString(trainClass)
+  DefaultAssay(trainDat)<-"RNA"
+  trainDat = loadTrainingData(subset(trainDat, downsample = downsample))
+  trainDat$mDat$Trainer = trainDat$mDat[[trainClass]]
+  
+  #Genes to always exclude (human only now)
+  hkGeneREGEX='^(EIF[0-9]|RPL[0-9]|RPS[0-9]|RPN1|POLR[0-9]|SNX[0-9]|HSP[AB][0-9]|H1FX|H2AF[VXYZ]|PRKA|NDUF[ABCSV]|ATP[0-9]|PSM[ABCDEFG][0-9]|UBA[0-9]|UBE[0-9]|USP[0-9]|TXN)'
+  coreExcludeGenes = unique(c(grep('\\.[0-9]+_',rownames(rtoc),value=TRUE), #Poorly characterised
+                              grep('MALAT1',rownames(rtoc),value=TRUE), #Contamination
+                              grep('^HB[BGMQDAZE][12]?_',rownames(rtoc),value=TRUE), #Contamination
+                              grep('^MT-',rownames(rtoc),value=TRUE), #Mitochondria
+                              grep(hkGeneREGEX,rownames(rtoc),value=TRUE) #Housekeeping genes
+  ))
+  
+  cells = c(rownames(trainDat$mDat))
+  
+  cl<-trainDat$mDat[[trainClass]]
+  names(cl)<-rownames(trainDat$mDat)
+  
+  classes = c(cl)
+  #Any genes to exclude go here
+  excludeGenes=coreExcludeGenes
+  #Any genes that we wish to give extra weight should go here
+  includeGenes=c()
+  #Get and normalise the data
+  genes<-intersect(x = rownames(testDat$toc), y=rownames(trainDat$toc))
+  trainDat$toc<-trainDat$toc[genes,]
+  testDat$toc<-testDat$toc[genes,]
+  
+  dat<-cbind(trainDat$toc)
+  
+  dat = Seurat::LogNormalize(dat)
+  dat = dat[(Matrix::rowSums(dat>0)>3 & !(rownames(dat)%in%excludeGenes)),]
+  dat = t(dat)
+  dim(dat)
+  fits= multinomialFitCV(dat,classes,nParallel=detectCores())
+  
+  dat = Seurat::LogNormalize(testDat$toc)
+  dat = t(dat)
+  #Load the trained models
+  preds = list()
+  for(mark in names(fits)){
+    message(sprintf("Predicting probabilities for cluster %s",mark))
+    preds[[mark]] = predict(fits[[mark]],newx=dat[,rownames(fits[[mark]]$glmnet.fit$beta)],s='lambda.1se',newoffset=rep(0,nrow(dat)))
+    #Make a plot of the logits in the new space
+    testDat$mDat$logits[match(rownames(preds[[mark]]),rownames(testDat$mDat))] = preds[[mark]][,1]
+    #Truncate logits at +/- 5
+    m = abs(testDat$mDat$logits)>5
+    testDat$mDat$logits[m]=5*sign(testDat$mDat$logits)[m]
+  }
+  #Now make a matrix
+  pp = do.call(cbind,preds) 
+  colnames(pp) = names(preds)
+  return(pp)
+}
+
