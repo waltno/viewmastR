@@ -352,7 +352,7 @@ franken_helper <- function(x, from_dataset="mmusculus_gene_ensembl", to_dataset=
 #' @import Seurat
 #' @export 
 #get RNA count matrix and metadata
-load_training_data = function(seurat){
+load_training_data <-function(seurat){
   metadata = seurat@meta.data
   ttoc = seurat@assays$RNA@counts
   return(list(toc=ttoc,mDat=metadata))
@@ -374,8 +374,6 @@ load_training_data = function(seurat){
 #' @import glmnet
 #' @return matrix
 #' @export
-
-
 log_reg_matrix<-function(trainDat, testDat, trainClass, testClass, downsample){
   #prepare test data
   Idents(testDat)<-toString(testClass)
