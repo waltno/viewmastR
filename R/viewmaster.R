@@ -349,35 +349,35 @@ franken_helper <- function(x, from_dataset="mmusculus_gene_ensembl", to_dataset=
   return(genesV2)
 }
 
-#' @import Seurat
-#' @export 
-#get RNA count matrix and metadata
+#' Load Training Data
+#'
+#' @param seurat 
+#'
+#' @return
+#' @export
+
 load_training_data <-function(seurat){
   metadata = seurat@meta.data
   ttoc = seurat@assays$RNA@counts
   return(list(toc=ttoc,mDat=metadata))
 }
 
-#' Single Cell RNA Logistic Regression Matrix
-#' @description A more quantitative method to cpmpare two single cell rna datasets
-#' Most code was delibrately taken from here :) github.com/constantAmateur/scKidneyTumors
-#' returns a single cell matrix of log reg results, assumes negative control cells is already in the training object!!
-#' @param trainDat Seurat Object
-#' @param testDat Seurat Object
-#' @param trainDat metadata column name used for training
-#' @param testDat metadata column name used for testing
-#' @param downsample number of cells to randomly downsample in training dataset 
-#' @import Seurat
-#' @import monocle3
-#' @import Matrix
-#' @import glmnet
-#' @import parallel
-#' @return matrix
-#' @export
 
+#' Single Cell Logistic Regression Matrix
+#'
+#' @param trainDat 
+#' @param testDat 
+#' @param trainClass 
+#' @param testClass 
+#' @param downsample 
+#'
+#' @return
+#' @export
+#'
 
 log_reg_matrix<-function(trainDat, testDat, trainClass, testClass, downsample){
   #prepare test data
+  
   Idents(testDat)<-toString(testClass)
   DefaultAssay(testDat)<-"RNA"
   testDat = loadTrainingData(testDat)
