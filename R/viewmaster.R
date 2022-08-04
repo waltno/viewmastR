@@ -371,8 +371,11 @@ load_training_data <-function(seurat){
 #' @import monocle3
 #' @import Matrix
 #' @import glmnet
+#' @import parallel
 #' @return matrix
 #' @export
+
+
 log_reg_matrix<-function(trainDat, testDat, trainClass, testClass, downsample){
   #prepare test data
   Idents(testDat)<-toString(testClass)
