@@ -340,14 +340,82 @@ franken<-function(cds, rowdata_col="gene_short_name", from_species="mm", to_spec
 }
 
 
-#' @import biomaRt
+#' franken_helper
+#'
+#' @param x 
+#' @param from_dataset 
+#' @param to_dataset 
+#' @param from_type 
+#' @param to_type 
+#'
+#' @return
 #' @export
+#'
+#' @examples
 franken_helper <- function(x, from_dataset="mmusculus_gene_ensembl", to_dataset="hsapiens_gene_ensembl", from_type="mgi_symbol", to_type="hgnc_symbol"){
   from_mart = useMart("ensembl", dataset = from_dataset)
   to_mart = useMart("ensembl", dataset = to_dataset)
   genesV2 = getLDS(attributes = c(from_type), filters = from_type, values = x , mart = from_mart, attributesL = c(to_type), martL = to_mart, uniqueRows=F)
   return(genesV2)
 }
+
+#' getPopulationOffset
+#'
+#' @param y 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+getPopulationOffset = function(y){
+  if(!is.factor(y))
+    y=factor(y)
+  if(length(levels(y))!=2)
+    stop("y must be a two-level factor")
+  off = sum(y==levels(y)[2])/length(y)
+  off = log(off/(1-off))
+  return(rep(off,length(y)))
+}
+
+#' multinomialFitCV
+#'
+#' @param x 
+#' @param y 
+#' @param nParallel 
+#' @param ... 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+multinomialFitCV = function(x,y,nParallel=detectCores(),...){
+  fits = list()
+  if(nParallel>1)
+    registerDoMC(cores=nParallel)
+  #Do them in order of size
+  marks = names(sort(table(as.character(y))))
+  for(mark in marks){
+    message(sprintf("Fitting model for variable %s",mark))
+    fac = factor(y==mark)
+    #The two main modes of failure are too few positives and errors constructing lambda.  These should be handled semi-gracefully
+    fits[[mark]] = tryCatch(
+      cv.glmnet(x,fac,offset=getPopulationOffset(fac),family='binomial',intercept=FALSE,alpha=0.99,nfolds=10,type.measure='class',parallel=T,...),
+      error = function(e) {
+        tryCatch(
+          cv.glmnet(x,fac,offset=getPopulationOffset(fac),family='binomial',intercept=FALSE,alpha=0.99,nfolds=10,type.measure='class',parallel=nParallel>1,lambda=exp(seq(-10,-3,length.out=100)),...),
+          error = function(e) {
+            warning(sprintf("Could not fit model for variable %s",mark))
+            return(NULL)
+          })
+      })
+  }
+  return(fits)
+}
+
+
+
+
+
 
 #' Load Training Data
 #'
