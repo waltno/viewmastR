@@ -1,15 +1,18 @@
 ---
 title: "BM HCA MPAL transfer label"
-output: html_notebook
+output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
-
-```{r}
+This vignette will show basic functions provided by viewmaster
+```{r warning=FALSE,message=FALSE,warning=FALSE,echo=F}
+graphics.off()
 rm(list=ls())
-
+knitr::opts_chunk$set(fig.width=8, fig.height=6,dpi=300,
+                      echo=FALSE, warning=FALSE, message=FALSE)
+knitr::opts_chunk$set(dev.args=list(bg="transparent"))
+xfun::pkg_load2(c('base64enc', 'htmltools', 'mime'))
 #Load neccessary packages
 suppressPackageStartupMessages({
   library(monocle3)
@@ -17,11 +20,15 @@ suppressPackageStartupMessages({
   library(dplyr)
   library(Matrix)
   library(ggplot2)
+  library(parallel)
+  library(doMC)
+  library(glmnet)
   library(xfun)
   library(pals)
   library(RColorBrewer)
   library(Seurat)
   library(ggplot2)
+  library(pheatmap)
   library(parallel)
   library(scCustomize)
   library(SeuratObject)
@@ -29,19 +36,50 @@ suppressPackageStartupMessages({
   library(tibble)
   library(pbmcapply)
   library(viridis)
+  library(ArchR)
+  library(viewmaster)
 })
-
-Sys.setenv('R_MAX_VSIZE'=32000000000)
-#Sys.getenv()
 ```
 
-#load HCA bone marrow data set
-```{r}
-hca.immune <- Connect(filename = "/Volumes/fh/scratch/delete90/furlan_s/owalt/BM_HCA/1M-immune-human-immune-10XV2.loom", mode = "r")
-hca.seurat <- as.Seurat(hca.immune)
-Idents(l6.seurat) <- "ClusterName"
-VlnPlot(l6.seurat, features = c("Sparc", "Ftl1", "Junb", "Ccl4"), ncol = 2)
+#load greenleaf MPAL dataset into monocle3
+```{r echo=T}
+mpal<-readRDS(file ="/Volumes/fh/fast/furlan_s/grp/data/ddata/BM_data/healthy_bone_marrow_greenleaf.rds")
+plot_cells(mpal, color_cells_by = "BioClassification", label_cell_groups = F)+scale_color_manual(values = sfc(n = 26))
 ```
+#load hca bone marrow seurat object, convert to monocle using viewmaster's helpful function 
+```{r echo=T}
+hca<-readRDS(file = "/Volumes/fh/fast/furlan_s/grp/data/ddata/BM_data/palantir_bm_r1.rds")
+hca<-seurat_to_monocle3(hca, seu_rd = "tsne")
+plot_cells(hca , color_cells_by = "cell_annotation", label_cell_groups = F)+scale_color_manual(values = sfc(10, scramble = F))
+```
+#Detect common variant genes between two cell data sets
+```{r echo=T}
+vg<-common_variant_genes(mpal, hca, top_n = 5000)
+```
+#Use softmax regression for viewmaster. We will use the Greenleaf lab's MPAL healthy bone marrow cell annotations and transfer them to Human Cell Atals of bone marrow
+```{r run echo=T}
+view<-viewmaster(ref_cds  = mpal, query_cds = hca, ref_celldata_col = "BioClassification", selected_genes = vg, verbose=T, FUNC = "softmax_regression", tf_idf = F)
+
+plot_cells(view, color_cells_by = "smr_celltype", label_cell_groups = F)+scale_color_manual(values = sfc(11))
+```
+#logistic regression matrix
+```{r echo=T}
+hca_seu<-monocle3_to_seurat(hca)
+mpal_seu<-monocle3_to_seurat(mpal, mon_rd = "UMAP")
+
+log_mat<-log_reg_matrix(trainDat = mpal_seu, testDat = hca_seu, trainClass = "BioClassification", testClass = "cell_annotation", downsample = 500)
+
+testDat<- loadTrainingData(hca_seu)
+
+clusterPreds = apply(log_mat,2,function(e) sapply(split(e,testDat$mDat[["cell_annotation"]]),mean))
+
+#Convert to percentages
+clusterPreds = (1+exp(-clusterPreds))**-1
+
+pheatmap(clusterPreds, cluster_cols=T,cluster_rows = T ,col = ArchR::paletteContinuous("coolwarm", n=10, reverse = F), border_color = "black")
+```
+
+
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
 

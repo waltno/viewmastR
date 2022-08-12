@@ -424,7 +424,7 @@ multinomialFitCV = function(x,y,nParallel=detectCores(),...){
 #' @return
 #' @export
 
-load_training_data <-function(seurat){
+loadTrainingData <-function(seurat){
   metadata = seurat@meta.data
   ttoc = seurat@assays$RNA@counts
   return(list(toc=ttoc,mDat=metadata))
@@ -457,13 +457,15 @@ log_reg_matrix<-function(trainDat, testDat, trainClass, testClass, downsample = 
   trainDat = loadTrainingData(subset(trainDat, downsample = downsample))
   trainDat$mDat$Trainer = trainDat$mDat[[trainClass]]
   
+  rtoc<-c(rownames(testDat$toc), rownames(trainDat$toc))
+  
   #Genes to always exclude (human only now)
   hkGeneREGEX='^(EIF[0-9]|RPL[0-9]|RPS[0-9]|RPN1|POLR[0-9]|SNX[0-9]|HSP[AB][0-9]|H1FX|H2AF[VXYZ]|PRKA|NDUF[ABCSV]|ATP[0-9]|PSM[ABCDEFG][0-9]|UBA[0-9]|UBE[0-9]|USP[0-9]|TXN)'
-  coreExcludeGenes = unique(c(grep('\\.[0-9]+_',rownames(rtoc),value=TRUE), #Poorly characterised
-                              grep('MALAT1',rownames(rtoc),value=TRUE), #Contamination
-                              grep('^HB[BGMQDAZE][12]?_',rownames(rtoc),value=TRUE), #Contamination
-                              grep('^MT-',rownames(rtoc),value=TRUE), #Mitochondria
-                              grep(hkGeneREGEX,rownames(rtoc),value=TRUE) #Housekeeping genes
+  coreExcludeGenes = unique(c(grep('\\.[0-9]+_',rtoc,value=TRUE), #Poorly characterised
+                              grep('MALAT1',rtoc,value=TRUE), #Contamination
+                              grep('^HB[BGMQDAZE][12]?_',rtoc,value=TRUE), #Contamination
+                              grep('^MT-',rtoc,value=TRUE), #Mitochondria
+                              grep(hkGeneREGEX,rtoc,value=TRUE) #Housekeeping genes
   ))
   
   cells = c(rownames(trainDat$mDat))

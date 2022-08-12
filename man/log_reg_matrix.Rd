@@ -15,10 +15,7 @@ log_reg_matrix(trainDat, testDat, trainClass, testClass, downsample = 200)
 
 \item{testClass}{metadata column to test}
 
-\item{downsample}{number of randomly, downsampled cells per metadata column in trainDat}
-}
-\value{
-
+\item{downsample}{number of randomly downsampled cells per metadata column in trainDat}
 }
 \description{
 Single Cell Logistic Regression Matrix
