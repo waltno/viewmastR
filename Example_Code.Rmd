@@ -1,6 +1,7 @@
 ---
 title: "BM HCA MPAL transfer label"
 output: html_document
+author: OW
 editor_options: 
   chunk_output_type: console
 ---
@@ -10,7 +11,7 @@ This vignette will show basic functions provided by viewmaster
 graphics.off()
 rm(list=ls())
 knitr::opts_chunk$set(fig.width=8, fig.height=6,dpi=300,
-                      echo=FALSE, warning=FALSE, message=FALSE)
+                      echo=TRUE, warning=FALSE, message=FALSE)
 knitr::opts_chunk$set(dev.args=list(bg="transparent"))
 xfun::pkg_load2(c('base64enc', 'htmltools', 'mime'))
 #Load neccessary packages
@@ -42,28 +43,29 @@ suppressPackageStartupMessages({
 ```
 
 #load greenleaf MPAL dataset into monocle3
-```{r echo=T}
+```{r}
 mpal<-readRDS(file ="/Volumes/fh/fast/furlan_s/grp/data/ddata/BM_data/healthy_bone_marrow_greenleaf.rds")
 plot_cells(mpal, color_cells_by = "BioClassification", label_cell_groups = F)+scale_color_manual(values = sfc(n = 26))
 ```
 #load hca bone marrow seurat object, convert to monocle using viewmaster's helpful function 
-```{r echo=T}
+```{r}
 hca<-readRDS(file = "/Volumes/fh/fast/furlan_s/grp/data/ddata/BM_data/palantir_bm_r1.rds")
 hca<-seurat_to_monocle3(hca, seu_rd = "tsne")
 plot_cells(hca , color_cells_by = "cell_annotation", label_cell_groups = F)+scale_color_manual(values = sfc(10, scramble = F))
 ```
 #Detect common variant genes between two cell data sets
-```{r echo=T}
+```{r}
 vg<-common_variant_genes(mpal, hca, top_n = 5000)
+vg
 ```
 #Use softmax regression for viewmaster. We will use the Greenleaf lab's MPAL healthy bone marrow cell annotations and transfer them to Human Cell Atals of bone marrow
-```{r run echo=T}
+```{r}
 view<-viewmaster(ref_cds  = mpal, query_cds = hca, ref_celldata_col = "BioClassification", selected_genes = vg, verbose=T, FUNC = "softmax_regression", tf_idf = F)
 
 plot_cells(view, color_cells_by = "smr_celltype", label_cell_groups = F)+scale_color_manual(values = sfc(11))
 ```
 #logistic regression matrix
-```{r echo=T}
+```{r}
 hca_seu<-monocle3_to_seurat(hca)
 mpal_seu<-monocle3_to_seurat(mpal, mon_rd = "UMAP")
 
@@ -73,7 +75,7 @@ testDat<- loadTrainingData(hca_seu)
 
 clusterPreds = apply(log_mat,2,function(e) sapply(split(e,testDat$mDat[["cell_annotation"]]),mean))
 
-#Convert to percentages
+#Convet to percentages
 clusterPreds = (1+exp(-clusterPreds))**-1
 
 pheatmap(clusterPreds, cluster_cols=T,cluster_rows = T ,col = ArchR::paletteContinuous("coolwarm", n=10, reverse = F), border_color = "black")
