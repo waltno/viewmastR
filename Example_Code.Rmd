@@ -15,9 +15,9 @@ knitr::opts_chunk$set(fig.width=8, fig.height=6,dpi=300,
 knitr::opts_chunk$set(dev.args=list(bg="transparent"))
 xfun::pkg_load2(c('base64enc', 'htmltools', 'mime'))
 #Load neccessary packages
+
 suppressPackageStartupMessages({
   library(monocle3)
-  library(reticulate)
   library(dplyr)
   library(Matrix)
   library(ggplot2)
@@ -31,40 +31,36 @@ suppressPackageStartupMessages({
   library(ggplot2)
   library(pheatmap)
   library(parallel)
-  library(scCustomize)
   library(SeuratObject)
   library(SeuratDisk)
-  library(tibble)
   library(pbmcapply)
-  library(viridis)
   library(ArchR)
   library(viewmaster)
 })
 ```
 
-#load greenleaf MPAL dataset into monocle3
+load greenleaf MPAL dataset into monocle3
 ```{r}
 mpal<-readRDS(file ="/Volumes/fh/fast/furlan_s/grp/data/ddata/BM_data/healthy_bone_marrow_greenleaf.rds")
 plot_cells(mpal, color_cells_by = "BioClassification", label_cell_groups = F)+scale_color_manual(values = sfc(n = 26))
 ```
-#load hca bone marrow seurat object, convert to monocle using viewmaster's helpful function 
+load hca bone marrow seurat object, convert to monocle using viewmaster's helpful function 
 ```{r}
 hca<-readRDS(file = "/Volumes/fh/fast/furlan_s/grp/data/ddata/BM_data/palantir_bm_r1.rds")
 hca<-seurat_to_monocle3(hca, seu_rd = "tsne")
 plot_cells(hca , color_cells_by = "cell_annotation", label_cell_groups = F)+scale_color_manual(values = sfc(10, scramble = F))
 ```
-#Detect common variant genes between two cell data sets
+Detect common variant genes between two cell data sets
 ```{r}
 vg<-common_variant_genes(mpal, hca, top_n = 5000)
-vg
 ```
-#Use softmax regression for viewmaster. We will use the Greenleaf lab's MPAL healthy bone marrow cell annotations and transfer them to Human Cell Atals of bone marrow
+Use softmax regression for viewmaster. We will use the Greenleaf lab's MPAL healthy bone marrow cell annotations and transfer them to Human Cell Atals of bone marrow
 ```{r}
 view<-viewmaster(ref_cds  = mpal, query_cds = hca, ref_celldata_col = "BioClassification", selected_genes = vg, verbose=T, FUNC = "softmax_regression", tf_idf = F)
 
 plot_cells(view, color_cells_by = "smr_celltype", label_cell_groups = F)+scale_color_manual(values = sfc(11))
 ```
-#logistic regression matrix
+logistic regression matrix
 ```{r}
 hca_seu<-monocle3_to_seurat(hca)
 mpal_seu<-monocle3_to_seurat(mpal, mon_rd = "UMAP")
@@ -82,10 +78,7 @@ pheatmap(clusterPreds, cluster_cols=T,cluster_rows = T ,col = ArchR::paletteCont
 ```
 
 
-
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
-
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
-
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+```{r}
+session_info()
+```
 
