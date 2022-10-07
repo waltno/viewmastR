@@ -13,4 +13,3 @@ Written by Scott Furlan.
 
 <p align="center"><img src="blob/furlan_lab_logo.png" alt="" width="500"></a></p>
 <hr>
-
