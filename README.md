@@ -1,4 +1,3 @@
-# Viewmaster
 
 <p align="center"><img src="blob/viewmaster-logopng.png" alt="" width="500"></a></p>
 <hr>
@@ -10,3 +9,8 @@ Viewmaster is a method for performing unsupervised classification of single cell
 ## Acknowledgements
 
 Written by Scott Furlan.
+
+
+<p align="center"><img src="blob/furlan_lab_logo.png" alt="" width="500"></a></p>
+<hr>
+
