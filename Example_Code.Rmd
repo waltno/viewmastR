@@ -37,6 +37,10 @@ suppressPackageStartupMessages({
   library(ArchR)
   library(viewmaster)
 })
+
+humanize
+
+
 ```
 
 load greenleaf MPAL dataset into monocle3
