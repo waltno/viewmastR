@@ -318,7 +318,7 @@ monocle3_to_seurat <-function(cds, seu_rd="umap", mon_rd="UMAP", assay_name="RNA
 #' human_seurat<-humanize(mouse_seurat)
 #' 
 humanize = function(seurat){
-  gene_switch<-read.delim("data/human_mouse_hcop_six_column.txt")
+  gene_switch<-human_mouse_genes
   require("AnnotationDbi")
   require("org.Mm.eg.db")
   require("org.Hs.eg.db")
