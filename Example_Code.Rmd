@@ -42,11 +42,13 @@ suppressPackageStartupMessages({
 load greenleaf MPAL dataset into monocle3
 ```{r}
 mpal<-readRDS(file ="/Volumes/fh/fast/furlan_s/grp/data/ddata/BM_data/healthy_bone_marrow_greenleaf.rds")
+save(mpal, file="data/healthy_bone_marrow_greenleaf.RData")
 plot_cells(mpal, color_cells_by = "BioClassification", label_cell_groups = F)+scale_color_manual(values = sfc(n = 26))
 ```
 load hca bone marrow seurat object, convert to monocle using viewmaster's helpful function 
 ```{r}
 hca<-readRDS(file = "/Volumes/fh/fast/furlan_s/grp/data/ddata/BM_data/palantir_bm_r1.rds")
+save(hca, file="data/palantir_bone_marrow.RData")
 hca<-seurat_to_monocle3(hca, seu_rd = "tsne")
 plot_cells(hca , color_cells_by = "cell_annotation", label_cell_groups = F)+scale_color_manual(values = sfc(10, scramble = F))
 ```

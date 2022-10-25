@@ -306,6 +306,65 @@ monocle3_to_seurat <-function(cds, seu_rd="umap", mon_rd="UMAP", assay_name="RNA
   seu
 }
 
+#' humanize
+#'
+#' @param seurat 
+#'
+#' @return seurat object with humanized genes
+#' @export
+#' @description This functin assumes that you seurat object has mouse genes and will return a new seurat object with 'humanized' genes.
+#' You will have to re-embed ie. NormalizeData() ScaleData() FindVariableFeatures() RunPCA() RunUMAP() after this!!!
+#' @examples
+#' human_seurat<-humanize(mouse_seurat)
+#' 
+humanize = function(seurat){
+  gene_switch<-read.delim("data/human_mouse_hcop_six_column.txt")
+  require("AnnotationDbi")
+  require("org.Mm.eg.db")
+  require("org.Hs.eg.db")
+  
+  print("getting RNA matrix")
+  seurat@assays$RNA@meta.features$gene_short_name = rownames(seurat)
+  
+  gene_df<-seurat@assays$RNA@meta.features
+  dim(gene_df)
+  print("convert gene_short_name to ensbl")
+  gene_df$ensb = mapIds(org.Mm.eg.db,
+                        keys=rownames(seurat), 
+                        column="ENSEMBL",
+                        keytype="SYMBOL",
+                        multiVals="first")
+  gene_df<-merge(gene_df, gene_switch, by.x = "ensb", by.y = "mouse_ensembl_gene", all = T)
+  human_gene_short = mapIds(org.Hs.eg.db,
+                            keys=gene_df$human_ensembl_gene, 
+                            column="SYMBOL",
+                            keytype="ENSEMBL",
+                            multiVals="first") %>% unlist()
+  human_gene_short<-human_gene_short[!duplicated(human_gene_short)]
+  print("number of human genes found:" ,length(human_gene_short))
+  
+  gene_df<-gene_df[!is.na(gene_df$gene_short_name),]
+  gene_df<-gene_df[!duplicated(gene_df$gene_short_name),]
+  gene_df<-gene_df[!duplicated(gene_df$human_ensembl_gene),]
+  
+  gene_df$human_gene_symbol<-NA
+  
+  human_gene_short<-human_gene_short[order(match(names(human_gene_short), gene_df$human_ensembl_gene))]
+  
+  gene_df$human_gene_symbol[which(gene_df$human_ensembl_gene %in% names(human_gene_short))] <-human_gene_short[which(names(human_gene_short) %in% gene_df$human_ensembl_gene)]
+  
+  seurat@assays$RNA@meta.features<-merge(seurat@assays$RNA@meta.features, gene_df, by.x = "gene_short_name", by.y = "gene_short_name", all = T)
+  
+  print("subsetting RNA matrix by found human genes, you'll need to re-embed!!")
+  rd<-seurat@assays$RNA@meta.features  %>% dplyr::filter(!is.na(human_gene_symbol))
+  mat<-seurat@assays$RNA@counts[rd$gene_short_name,]
+  rownames(mat)<-rd$human_gene_symbol
+  rownames(rd)<-rd$human_gene_symbol
+  
+  print("making new seurat object")
+  hum<-CreateSeuratObject(mat, project = "humanized", meta.data = seurat@meta.data)
+  hum
+}
 
 #' Franken
 #' @description Will prepare monocle3 objects for use across species
