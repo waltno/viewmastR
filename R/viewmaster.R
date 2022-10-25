@@ -340,7 +340,6 @@ humanize = function(seurat){
                             keytype="ENSEMBL",
                             multiVals="first") %>% unlist()
   human_gene_short<-human_gene_short[!duplicated(human_gene_short)]
-  print("number of human genes found:" ,length(human_gene_short))
   
   gene_df<-gene_df[!is.na(gene_df$gene_short_name),]
   gene_df<-gene_df[!duplicated(gene_df$gene_short_name),]
