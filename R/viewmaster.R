@@ -321,7 +321,7 @@ humanize = function(seurat){
   require("AnnotationDbi")
   require("org.Mm.eg.db")
   require("org.Hs.eg.db")
-  
+  human_mouse_genes<-viewmaster::gene_switch
   print("getting RNA matrix")
   seurat@assays$RNA@meta.features$gene_short_name = rownames(seurat)
   
