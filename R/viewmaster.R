@@ -318,7 +318,6 @@ monocle3_to_seurat <-function(cds, seu_rd="umap", mon_rd="UMAP", assay_name="RNA
 #' human_seurat<-humanize(mouse_seurat)
 #' 
 humanize = function(seurat){
-  gene_switch<-human_mouse_genes
   require("AnnotationDbi")
   require("org.Mm.eg.db")
   require("org.Hs.eg.db")
@@ -334,7 +333,7 @@ humanize = function(seurat){
                         column="ENSEMBL",
                         keytype="SYMBOL",
                         multiVals="first")
-  gene_df<-merge(gene_df, gene_switch, by.x = "ensb", by.y = "mouse_ensembl_gene", all = T)
+  gene_df<-merge(gene_df, human_mouse_genes, by.x = "ensb", by.y = "mouse_ensembl_gene", all = T)
   human_gene_short = mapIds(org.Hs.eg.db,
                             keys=gene_df$human_ensembl_gene, 
                             column="SYMBOL",
