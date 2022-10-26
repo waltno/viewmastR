@@ -12,5 +12,5 @@ sfc(n, scramble = F)
 \item{scramble}{whether to jumble the colors}
 }
 \description{
-This function creates a color palatte
+This function creates a color palette
 }
