@@ -92,18 +92,22 @@ plot_geneset<-function(cds, marker_set, name, fData_col="gene_short_name", metho
     scale_color_gradientn(colors=c( "darkblue","skyblue", "white", "red", "darkred"))
 }
 
-monocle_theme_opts <- function()
+#' viewmastr ggplot theme
+#'
+#' @return
+#' @export
+#'
+#' @examples
+viewmastr_theme <- function()
 {
   theme(strip.background = element_rect(colour = 'white', fill = 'white')) +
-    theme(panel.border = element_blank()) +
-    theme(axis.line.x = element_line(size=0.25, color="black")) +
-    theme(axis.line.y = element_line(size=0.25, color="black")) +
-    theme(panel.grid.minor.x = element_blank(),
-          panel.grid.minor.y = element_blank()) +
-    theme(panel.grid.major.x = element_blank(),
-          panel.grid.major.y = element_blank()) +
-    theme(panel.background = element_rect(fill='white')) +
-    theme(legend.key=element_blank())
+    theme(panel.background = element_rect(fill = "transparent",colour = NA),
+          panel.grid.minor = element_blank(), 
+          panel.grid.major = element_blank(),
+          legend.background = element_rect(fill = "transparent"),
+          legend.box.background = element_rect(fill = "transparent"), 
+          legend.key = element_rect(fill = "transparent", colour = NA),
+          plot.background = element_rect(fill = "transparent",colour = NA))
 }
 
 
