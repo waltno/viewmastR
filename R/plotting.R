@@ -98,16 +98,16 @@ plot_geneset<-function(cds, marker_set, name, fData_col="gene_short_name", metho
 #' @export
 #'
 #' @examples
-viewmastr_theme <- function()
+theme_viewmastr <- function()
 {
   theme(strip.background = element_rect(colour = 'white', fill = 'white')) +
     theme(panel.background = element_rect(fill = "transparent",colour = NA),
           panel.grid.minor = element_blank(), 
           panel.grid.major = element_blank(),
-          legend.background = element_rect(fill = "transparent"),
-          legend.box.background = element_rect(fill = "transparent"), 
+          legend.background = element_rect(fill = "transparent", colour = NA),
+          legend.box.background = element_rect(fill = "transparent", colour = NA), 
           legend.key = element_rect(fill = "transparent", colour = NA),
-          plot.background = element_rect(fill = "transparent",colour = NA))
+          plot.background = element_rect(fill = "transparent",colour = NA))+NoAxes()
 }
 
 
