@@ -312,12 +312,12 @@ monocle3_to_seurat <-function(cds, seu_rd="umap", mon_rd="UMAP", assay_name="RNA
 #'
 #' @return seurat object with humanized genes
 #' @export
-#' @description This functin assumes that you seurat object has mouse genes and will return a new seurat object with 'humanized' genes.
-#' You will have to re-embed ie. NormalizeData() ScaleData() FindVariableFeatures() RunPCA() RunUMAP() after this!!!
+#' @description This function assumes that you seurat object has mouse genes and will return a new seurat object with 'humanized' genes.
+#' You will lose variable features after this, the original umap coordinates are maintained
 #' @examples
 #' human_seurat<-humanize(mouse_seurat)
 #' 
-humanize = function(seurat){
+humanize = function(seurat, seu_rd, assay){
   require("AnnotationDbi")
   require("org.Mm.eg.db")
   require("org.Hs.eg.db")
@@ -353,14 +353,16 @@ humanize = function(seurat){
   
   seurat@assays$RNA@meta.features<-merge(seurat@assays$RNA@meta.features, gene_df, by.x = "gene_short_name", by.y = "gene_short_name", all = T)
   
-  print("subsetting RNA matrix by found human genes, you'll need to re-embed!!")
+  print("subsetting RNA matrix by found human genes, you'll need to find variable features again")
   rd<-seurat@assays$RNA@meta.features  %>% dplyr::filter(!is.na(human_gene_symbol))
   mat<-seurat@assays$RNA@counts[rd$gene_short_name,]
   rownames(mat)<-rd$human_gene_symbol
   rownames(rd)<-rd$human_gene_symbol
-  
+
   print("making new seurat object")
   hum<-CreateSeuratObject(mat, project = "humanized", meta.data = seurat@meta.data)
+  hum@reductions[["umap"]]<-Seurat::CreateDimReducObject(embeddings = seurat@reductions[[seu_rd]]@cell.embeddings, key = paste0(seu_rd, "_"), assay = assay, )
+  
   hum
 }
 
@@ -375,6 +377,7 @@ humanize = function(seurat){
 
 franken<-function(cds, rowdata_col="gene_short_name", from_species="mm", to_species="hs", trim=T){
   message("Currently only human and mgi symbols supported")
+  message("This function is buggy as it depends on biomart and ensembl, use humanize() for a quicker conversion")
   if(from_species==to_species){return(cds)}
   labels<-data.frame(mm=c(dataset="mmusculus_gene_ensembl", prefix="mgi"), hs=c(dataset="hsapiens_gene_ensembl", prefix="hgnc"))
   from_X<-rowData(cds)[[rowdata_col]]

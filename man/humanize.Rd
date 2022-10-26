@@ -4,7 +4,7 @@
 \alias{humanize}
 \title{humanize}
 \usage{
-humanize(seurat)
+humanize(seurat, seu_rd, assay)
 }
 \arguments{
 \item{seurat}{}
@@ -13,8 +13,8 @@ humanize(seurat)
 seurat object with humanized genes
 }
 \description{
-This functin assumes that you seurat object has mouse genes and will return a new seurat object with 'humanized' genes.
-You will have to re-embed ie. NormalizeData() ScaleData() FindVariableFeatures() RunPCA() RunUMAP() after this!!!
+This function assumes that you seurat object has mouse genes and will return a new seurat object with 'humanized' genes.
+You will lose variable features after this, the original umap coordinates are maintained
 }
 \examples{
 human_seurat<-humanize(mouse_seurat)
