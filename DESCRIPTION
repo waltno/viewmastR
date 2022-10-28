@@ -1,4 +1,4 @@
-Package: viewmaster
+Package: viewmastR
 Type: R Package
 Title: This package aims annotate scRNAseq data according to a reference
 Version: 1.0
