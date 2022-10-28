@@ -28,7 +28,7 @@ monocle3_to_seurat(
 a cell_data_set object
 }
 \description{
-Conver Monocle3 cell data set to a Seurat object.  For a variety of reasons, the recommendations are to use this funciont
-only to generate skeleton Seurat objects that can be used for plotting and not much else.  The resulting object will not contain PCA reducitons or 
+Convert Monocle3 cell data set to a Seurat object.  For a variety of reasons, the recommendations are to use this function
+only to generate skeleton Seurat objects that can be used for plotting and not much else.  The resulting object will not contain PCA reductions or 
 nearest neighbor graphs.
 }

@@ -280,8 +280,8 @@ seurat_to_monocle3 <-function(seu, seu_rd="umap", mon_rd="UMAP", assay_name="RNA
 }
 
 #' Monocle3 to Seurat
-#' @description Conver Monocle3 cell data set to a Seurat object.  For a variety of reasons, the recommendations are to use this funciont
-#' only to generate skeleton Seurat objects that can be used for plotting and not much else.  The resulting object will not contain PCA reducitons or 
+#' @description Convert Monocle3 cell data set to a Seurat object.  For a variety of reasons, the recommendations are to use this function
+#' only to generate skeleton Seurat objects that can be used for plotting and not much else.  The resulting object will not contain PCA reductions or 
 #' nearest neighbor graphs.
 #' @param seu Seurat Object
 #' @param seu_rd Reduced dimname for seurat ('i.e. UMAP')
@@ -305,6 +305,56 @@ monocle3_to_seurat <-function(cds, seu_rd="umap", mon_rd="UMAP", assay_name="RNA
   if(normalize){seu<-NormalizeData(seu)}
   seu
 }
+
+
+#' archr matrix to seurat object
+#'
+#' @param proj 
+#' @param matrix 
+#' @param binarize 
+#' @param archr_rd 
+#'
+#' @return seurat object with specificed umap coordinates
+#' @export
+#'
+#' @examples
+#' seurat<-archR_to_serat(proj, "GeneScoreMatrix", binarize = F, archr_rd = "ATAC_UMAP")
+#' 
+#' 
+archR_to_seurat = function(proj, matrix, binarize, archr_rd){
+  se<-getMatrixFromProject(proj, useMatrix = matrix, binarize = binarize)
+  mat<-se@assays@data@listData[[matrix]]
+  feature_df<-se@elementMetadata %>% as.data.frame()
+  
+  if(matrix == "GeneScoreMatrix" | matrix == "GeneExpressionMatrix" | matrix ==  "MotifMatrix"){
+    rn<-feature_df$name
+  }
+  if(matrix == "TileMatrix"){
+    rn<-paste0(feature_df[,1] , "-", feature_df[,2] , "-",feature_df[,3])  
+  }
+  if(matrix == "PeakMatrix"){
+    feature_df<-se@rowRanges %>%as.data.frame()
+    rn<-paste0(feature_df[,1] , "-", feature_df[,2] , "-",feature_df[,3])  
+  }
+  rownames(mat)<-rn
+  colnames(mat)<-colnames(se)
+  meta<-se@colData %>% as.data.frame()
+  rownames(meta)<-colnames(mat)
+  seu<-CreateSeuratObject(mat, project = matrix, assay = matrix, meta.data = meta)
+  
+  keyname <- paste0(archr_rd, "_")
+  umap_df<-proj@embeddings@listData[[archr_rd]]@listData[["df"]] %>% as.matrix()
+  colnames(umap_df) <- paste0(keyname, 1:2)
+  seu@reductions[[archr_rd]] <- Seurat::CreateDimReducObject(embeddings = umap_df, 
+                                                             key = keyname, assay = matrix )
+  seu
+}
+
+
+
+
+
+
 
 #' humanize
 #'
