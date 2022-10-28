@@ -366,6 +366,48 @@ humanize = function(seurat, seu_rd, assay){
   hum
 }
 
+#' archR_to_seurat
+#'
+#' @param proj 
+#' @param matrix 
+#' @param binarize 
+#' @param archr_rd 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+archR_to_seurat = function(proj, matrix, binarize, archr_rd){
+  se<-getMatrixFromProject(proj, useMatrix = matrix, binarize = binarize)
+  mat<-se@assays@data@listData[[matrix]]
+  feature_df<-se@elementMetadata %>% as.data.frame()
+  
+  if(matrix == "GeneScoreMatrix" | matrix == "GeneExpressionMatrix" | matrix ==  "MotifMatrix"){
+    rn<-feature_df$name
+  }
+  if(matrix == "TileMatrix"){
+    rn<-paste0(feature_df[,1] , "-", feature_df[,2] , "-",feature_df[,3])  
+  }
+  if(matrix == "PeakMatrix"){
+    feature_df<-se@rowRanges %>%as.data.frame()
+    rn<-paste0(feature_df[,1] , "-", feature_df[,2] , "-",feature_df[,3])  
+  }
+  rownames(mat)<-rn
+  colnames(mat)<-colnames(se)
+  meta<-se@colData %>% as.data.frame()
+  rownames(meta)<-colnames(mat)
+  seu<-CreateSeuratObject(mat, project = matrix, assay = matrix, meta.data = meta)
+  
+  keyname <- paste0(archr_rd, "_")
+  umap_df<-proj@embeddings@listData[[archr_rd]]@listData[["df"]] %>% as.matrix()
+  colnames(umap_df) <- paste0(keyname, 1:2)
+  seu@reductions[[archr_rd]] <- Seurat::CreateDimReducObject(embeddings = umap_df, 
+                                                             key = keyname, assay = matrix )
+  seu
+}
+
+
+
 #' Franken
 #' @description Will prepare monocle3 objects for use across species
 #' @param cds cell_data_set

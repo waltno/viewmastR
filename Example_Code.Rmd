@@ -38,8 +38,6 @@ suppressPackageStartupMessages({
   library(viewmaster)
 })
 
-humanize
-
 
 ```
 
@@ -83,6 +81,26 @@ clusterPreds = (1+exp(-clusterPreds))**-1
 pheatmap(clusterPreds, cluster_cols=T,cluster_rows = T ,col = ArchR::paletteContinuous("coolwarm", n=10, reverse = F), border_color = "black")
 ```
 
+#humanize
+```{r}
+ROOT_DIR<-"~/Fred Hutchinson Cancer Research Center"
+stem<-"Myeloma Exhaustion - General/mm2"
+CDS_DIR <- file.path(ROOT_DIR,  stem, "cds")
+
+#Seurat Object
+mm2<- readRDS(file.path(CDS_DIR, "120621_mm2_seurat.rds"))
+library(Seurat)
+library(viewmaster)
+mm2$test<-mm2$sample
+mm2$test[sample(mm2$test, size = 1000)]<-"test1"
+mm2$test[sample(mm2$test, size = 1000)]<-"test2"
+
+
+DimPlot(mm2, group.by = "cluster_3d")+scale_color_manual(values = sfc(n=10))+theme_viewmastr()
+DimPlot(mm2, group.by = "cluster_3d")+scale_color_manual(values =pal_continuous(set = "acidRain", n =12) %>% sample(size = 10))+theme_viewmastr()
+DimPlot(mm2, group.by = "cluster_3d")+scale_color_manual(values =pal_continuous(set = "fallDay", n =10) %>% sample(size = 10))+theme_viewmastr()
+DimPlot(mm2, group.by = "cluster_3d")+scale_color_manual(values =pal_continuous(set = "springTime", n =10))+theme_viewmastr()
+```
 
 ```{r}
 session_info()
