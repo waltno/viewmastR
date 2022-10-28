@@ -11,9 +11,9 @@ CXX11=`"${R_HOME}/bin/R" CMD config CXX1X`
 CXX11STD=`"${R_HOME}/bin/R" CMD config CXX1XSTD`
 CXX="${CXX11} ${CXX11STD}"
 CXXFLAGS=`"${R_HOME}/bin/R" CMD config CXX1XFLAGS`
-
-AF_CXXFLAGS=`${R_HOME}/bin/Rscript -e "RcppArrayFire:::CxxFlags()"`
-AF_LIBS=`${R_HOME}/bin/Rscript -e "RcppArrayFire:::LdFlags()"`
+R_VERSION=`${R_HOME}/bin/Rscript -e 'cat(gsub("(\\.\\d)?$", "", format(getRversion())))'`
+AF_CXXFLAGS=`${R_HOME}/bin/Rscript -e 'RcppArrayFire:::CxxFlags()'`
+AF_LIBS=`${R_HOME}/bin/Rscript -e 'RcppArrayFire:::LdFlags()'`
 
 sed -e "s|@AF_LIBS@|${AF_LIBS}|" \
     -e "s|@AF_CXXFLAGS@|${AF_CXXFLAGS}|" \
